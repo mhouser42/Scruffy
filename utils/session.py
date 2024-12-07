@@ -19,7 +19,7 @@ def initialize_session_state():
         st.session_state['dataframe_versions'] = {}
 
 def clear_session_state():
-    print("Clearing session state...")
+    print('Clearing session state...')
     if 'dataframe_versions' in st.session_state:
         original_version = next(iter(st.session_state['dataframe_versions'].items()))
         scruffed_version = next(
@@ -45,7 +45,7 @@ def clear_session_state():
 
         st.session_state['selected_version'] = original_version[0]
 
-        print("Resetting command-related states")
+        print('Resetting command-related states')
         st.session_state['commands'] = []
         st.session_state['is_default_template'] = True
         st.session_state['filter_groups'] = [{'logical_op': 'AND', 'filters': []}]
@@ -53,4 +53,4 @@ def clear_session_state():
         st.session_state['counts'] = None
         st.session_state['commands_executed'] = False
 
-    print("Session state cleared")
+    print('Session state cleared')

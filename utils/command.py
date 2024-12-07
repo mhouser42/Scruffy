@@ -87,12 +87,12 @@ def generate_commands():
         st.success('Commands generated successfully.')
         st.rerun()
     except Exception as e:
-        st.error(f"Error generating commands: {str(e)}")
+        st.error(f'Error generating commands: {str(e)}')
 
 
 def generate_scruff_command(original_filename, original_description, options):
     base_filename = original_filename.rsplit('.', 1)[0]
-    new_filename = f"{base_filename}_scruffed.csv"
+    new_filename = f'{base_filename}_scruffed.csv'
 
     active_options = []
 
@@ -100,19 +100,19 @@ def generate_scruff_command(original_filename, original_description, options):
         if isinstance(value, bool) and value:
             active_options.append(key)
         elif isinstance(value, (int, float)) and value is not None:
-            active_options.append(f"{key}: {value}")
+            active_options.append(f'{key}: {value}')
         elif isinstance(value, list) and value:
-            active_options.append(f"{key}: {value}")
-        elif isinstance(value, str) and value != "None":
-            active_options.append(f"{key}: {value}")
+            active_options.append(f'{key}: {value}')
+        elif isinstance(value, str) and value != 'None':
+            active_options.append(f'{key}: {value}')
 
-    scruff_description = ", ".join(active_options)
-    new_description = f"{original_description}. Scruffed with: {scruff_description}"
+    scruff_description = ', '.join(active_options)
+    new_description = f'{original_description}. Scruffed with: {scruff_description}'
 
     command = {
-        "filename": new_filename,
-        "description": new_description,
-        "scruff": options
+        'filename': new_filename,
+        'description': new_description,
+        'scruff': options
     }
 
     return command

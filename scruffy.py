@@ -71,7 +71,7 @@ class Broom:
                 elif target_type == 'string':
                     df_copy[column] = df_copy[column].astype(str)
             except Exception as e:
-                st.warning(f"Could not convert {column} to {target_type}: {str(e)}")
+                st.warning(f'Could not convert {column} to {target_type}: {str(e)}')
         return df_copy
 
     def _clean_text(self, text, remove_accents=True, to_lowercase=True,
@@ -210,11 +210,11 @@ class Vacuum:
 
     def apply_filter(self, df, column, condition):
         if column not in df.columns:
-            raise ValueError(f"Column '{column}' not found in DataFrame.")
+            raise ValueError(f'Column "{column}" not found in DataFrame.')
         op = condition['op']
         value = condition.get('value')
         if op not in self.OPS:
-            raise ValueError(f"Unsupported operation '{op}'")
+            raise ValueError(f'Unsupported operation "{op}"')
         series = df[column]
         if op not in ['isna', 'notna']:
             if pd.api.types.is_numeric_dtype(series):
@@ -222,23 +222,23 @@ class Vacuum:
                     try:
                         value = [float(v) for v in value]
                     except ValueError:
-                        raise ValueError(f"Cannot convert values {value} to float for numeric column '{column}'.")
+                        raise ValueError(f'Cannot convert values {value} to float for numeric column "{column}".')
                 else:
                     try:
                         value = float(value)
                     except ValueError:
-                        raise ValueError(f"Cannot convert value '{value}' to float for numeric column '{column}'.")
+                        raise ValueError(f'Cannot convert value "{value}" to float for numeric column "{column}".')
             elif pd.api.types.is_datetime64_any_dtype(series):
                 if isinstance(value, list):
                     try:
                         value = [pd.to_datetime(v) for v in value]
                     except ValueError:
-                        raise ValueError(f"Cannot convert values {value} to datetime for column '{column}'.")
+                        raise ValueError(f'Cannot convert values {value} to datetime for column "{column}".')
                 else:
                     try:
                         value = pd.to_datetime(value)
                     except ValueError:
-                        raise ValueError(f"Cannot convert value '{value}' to datetime for column '{column}'.")
+                        raise ValueError(f'Cannot convert value "{value}" to datetime for column "{column}".')
             elif pd.api.types.is_string_dtype(series):
                 value = str(value)
         if op in ['isna', 'notna']:
@@ -246,7 +246,7 @@ class Vacuum:
         elif value is not None:
             return self.OPS[op](series, value)
         else:
-            raise ValueError(f"Missing value for operation '{op}' on column '{column}'")
+            raise ValueError(f'Missing value for operation "{op}" on column "{column}"')
 
     def build_mask(self, df, filters):
         if isinstance(filters, dict):
@@ -259,7 +259,7 @@ class Vacuum:
                         elif isinstance(conditions, dict):
                             masks = [self.build_mask(df, conditions)]
                         else:
-                            raise ValueError(f"Invalid format for {logical_op} conditions: {conditions}")
+                            raise ValueError(f'Invalid format for {logical_op} conditions: {conditions}')
                         if logical_op == 'OR':
                             return pd.concat(masks, axis=1).any(axis=1)
                         elif logical_op == 'XOR':
@@ -279,7 +279,7 @@ class Vacuum:
                         masks.append(self.build_mask(df, condition))
                 return pd.concat(masks, axis=1).all(axis=1)
         else:
-            raise ValueError(f"Invalid filter format: {filters}")
+            raise ValueError(f'Invalid filter format: {filters}')
 
     def apply_command(self, df, command, get_count=False):
         filters = command.get('filters')
@@ -316,7 +316,7 @@ class Vacuum:
         dfs = []
         counts = [] if get_counts else None
         for command in commands:
-            filename = command.get('filename', f"{command.get('description', 'no_description')}.csv")
+            filename = command.get('filename', f'{command.get('description', 'no_description')}.csv')
             description = command.get('description', 'No description provided')
             result = self.apply_command(df, command=command, get_count=get_counts)
             if get_counts:
@@ -329,7 +329,7 @@ class Vacuum:
                 report = self.report_command(filter_df, count) if get_counts else self.report_command(filter_df)
                 dfs.append(report)
             if save_dfs:
-                output_dir = "data/output_dfs"
+                output_dir = 'data/output_dfs'
                 os.makedirs(output_dir, exist_ok=True)
                 output_path = os.path.join(output_dir, filename)
                 filter_df.to_csv(output_path, index=False)
@@ -354,14 +354,14 @@ class LLMHandler:
             with open('auth.txt', 'r') as f:
                 return f.read().strip()
         except FileNotFoundError:
-            raise FileNotFoundError("auth.txt file not found. Please provide your Arliai API token in auth.txt.")
+            raise FileNotFoundError('auth.txt file not found. Please provide your Arliai API token in auth.txt.')
 
     def _load_grammar(self) -> str:
         try:
             with open('data/grammar.gbnf', 'r') as f:
                 return f.read()
         except FileNotFoundError:
-            raise FileNotFoundError("grammar.gbnf not found in data directory.")
+            raise FileNotFoundError('grammar.gbnf not found in data directory.')
 
     def load_system_prompt(self) -> None:
         try:
@@ -369,7 +369,7 @@ class LLMHandler:
                 self._base_system_prompt = f.read()
                 self._current_system_prompt = self._base_system_prompt
         except FileNotFoundError:
-            raise FileNotFoundError("system_prompt.md not found in data directory.")
+            raise FileNotFoundError('system_prompt.md not found in data directory.')
 
     def get_column_context(self, df, max_samples=5):
         context = {}
@@ -392,15 +392,15 @@ class LLMHandler:
 
         column_context = self.get_column_context(df)
 
-        context_str = "\nColumn Value Examples:\n"
+        context_str = '\nColumn Value Examples:\n'
         for column, values in column_context.items():
-            context_str += f"{column}: {values}\n"
+            context_str += f'{column}: {values}\n'
 
         self._current_system_prompt = (
                 self._base_system_prompt +
-                f"\n\nCurrent DataFrame Information:\n{df_info}\n" +
-                f"\nDataFrame Shape: {df.shape}\n" +
-                f"Column Names: {list(df.columns)}\n" +
+                f'\n\nCurrent DataFrame Information:\n{df_info}\n' +
+                f'\nDataFrame Shape: {df.shape}\n' +
+                f'Column Names: {list(df.columns)}\n' +
                 context_str
         )
 
@@ -411,21 +411,21 @@ class LLMHandler:
     def generate_response(self, user_input: str) -> List[Dict[str, Any]]:
         try:
             payload = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": self._current_system_prompt},
-                    {"role": "user", "content": user_input}
+                'model': self.model,
+                'messages': [
+                    {'role': 'system', 'content': self._current_system_prompt},
+                    {'role': 'user', 'content': user_input}
                 ],
-                "temperature": 0.2,
-                "top_p": 0.9,
-                "top_k": 40,
-                "max_tokens": 1024,
-                "repetition_penalty": 1.1,
+                'temperature': 0.2,
+                'top_p': 0.9,
+                'top_k': 40,
+                'max_tokens': 1024,
+                'repetition_penalty': 1.1,
             }
 
             headers = {
                 'Content-Type': 'application/json',
-                'Authorization': f"Bearer {self.api_key}"
+                'Authorization': f'Bearer {self.api_key}'
             }
 
             response = requests.post(
@@ -435,12 +435,12 @@ class LLMHandler:
                 timeout=30
             )
             if response.status_code != 200:
-                error_message = f"API command failed: {response.status_code}"
+                error_message = f'API command failed: {response.status_code}'
                 try:
                     error_detail = response.json()
-                    error_message += f" - {error_detail}"
+                    error_message += f' - {error_detail}'
                 except:
-                    error_message += f" - {response.text}"
+                    error_message += f' - {response.text}'
                 raise ValueError(error_message)
 
             content = response.json()['choices'][0]['message']['content']
@@ -453,13 +453,13 @@ class LLMHandler:
                 if json_match:
                     return json.loads(json_match.group())
                 else:
-                    raise ValueError("No valid JSON array found in response")
+                    raise ValueError('No valid JSON array found in response')
 
 
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Network error: {str(e)}")
+            raise ValueError(f'Network error: {str(e)}')
         except Exception as e:
-            raise ValueError(f"Failed to generate response: {str(e)}")
+            raise ValueError(f'Failed to generate response: {str(e)}')
 
 class DataLogger:
     _instance = None
@@ -500,7 +500,7 @@ class DataLogger:
         return logger
 
     def log_data_info(self, df: pd.DataFrame, operation_name: str) -> None:
-        log_id = f"{operation_name}_{df.shape}"
+        log_id = f'{operation_name}_{df.shape}'
 
         if hasattr(self, '_last_log_id') and self._last_log_id == log_id:
             return
@@ -512,20 +512,20 @@ class DataLogger:
             'shape': df.shape,
             'columns': df.columns.tolist(),
             'na_counts': df.isna().sum().to_dict(),
-            'memory_usage': f"{df.memory_usage(deep=True).sum() / 1024 ** 2:.2f} MB"
+            'memory_usage': f'{df.memory_usage(deep=True).sum() / 1024 ** 2:.2f} MB'
         }
-        self.logger.info(f"Data Info - {operation_name}:")
+        self.logger.info(f'Data Info - {operation_name}:')
         for key, value in info.items():
-            self.logger.info(f"  {key}: {value}")
+            self.logger.info(f'  {key}: {value}')
 
     def log_operation_result(self, operation: str,
                             initial_shape: tuple,
                             final_shape: tuple,
                             details: Optional[Dict[str, Any]] = None) -> None:
-        self.logger.info(f"{operation} changed shape from {initial_shape} to {final_shape}")
+        self.logger.info(f'{operation} changed shape from {initial_shape} to {final_shape}')
         if details:
             for key, value in details.items():
-                self.logger.info(f"  {key}: {value}")
+                self.logger.info(f'  {key}: {value}')
 
     def log_error(self, error_message: str) -> None:
         self.logger.error(error_message)
@@ -569,7 +569,7 @@ class Scruffy:
             self.llm.update_system_prompt_with_df(df_to_use)
 
     def load_data(self, df, filename):
-        self.logger.log_data_info(df, "Initial Load")
+        self.logger.log_data_info(df, 'Initial Load')
 
         self.orig_df = df.copy()
         self.curr_df = df.copy()
@@ -587,7 +587,7 @@ class Scruffy:
         current_df = self._get_current_df()
         df_to_clean = df if df is not None else current_df
 
-        self.logger.log_data_info(df_to_clean, "Before Scruff")
+        self.logger.log_data_info(df_to_clean, 'Before Scruff')
 
         excluded_columns = options.get('excluded_columns', [])
         columns_to_process = [col for col in df_to_clean.columns if col not in excluded_columns]
@@ -603,7 +603,7 @@ class Scruffy:
         cleaned_df = pd.concat([cleaned_df_processed, df_to_clean_excluded], axis=1)
 
         self.logger.log_operation_result(
-            "Scruffing...",
+            'Scruffing...',
             df_to_clean.shape,
             cleaned_df.shape,
             details=options
@@ -611,7 +611,7 @@ class Scruffy:
 
         if df is None:
             self.curr_df = cleaned_df.copy()
-            self.history.append(("clean", None))
+            self.history.append(('clean', None))
 
             scruffed_filename = f'{self.filename}_scruffed.csv'
             self.dataframe_versions[scruffed_filename] = cleaned_df.copy()
@@ -645,9 +645,9 @@ class Scruffy:
             self.dataframe_versions = {'Original': self.orig_df.copy()}
 
             for op_type, op_data in self.history:
-                if op_type == "clean":
+                if op_type == 'clean':
                     self.scruff()
-                elif op_type == "command":
+                elif op_type == 'command':
                     self.apply_command(op_data)
 
             st.session_state['dataframe_versions'] = self.dataframe_versions
@@ -659,7 +659,7 @@ class Scruffy:
     def apply_command(self, command, df=None):
         current_df = self._get_current_df()
         df_to_use = df if df is not None else current_df
-        self.logger.log_data_info(df_to_use, f"Before Command: {command.get('filename', 'Unnamed')}")
+        self.logger.log_data_info(df_to_use, f'Before Command: {command.get('filename', 'Unnamed')}')
 
         # Handle 'scruff' operations
         scruff_options = command.get('scruff')
@@ -674,7 +674,7 @@ class Scruffy:
             result = df_to_use
 
         self.logger.log_operation_result(
-            f"Command: {command.get('filename', 'Unnamed')}",
+            f'Command: {command.get('filename', 'Unnamed')}',
             df_to_use.shape,
             result.shape,
             details=command
@@ -682,7 +682,7 @@ class Scruffy:
 
         if df is None:
             self.curr_df = result.copy()
-            self.history.append(("command", command))
+            self.history.append(('command', command))
 
             version_name = command.get('filename', 'unnamed_command.csv')
             self.dataframe_versions[version_name] = result.copy()
@@ -726,7 +726,7 @@ class Scruffy:
                         self.dataframe_versions[version_name] = filter_df.copy()
 
                 except Exception as e:
-                    st.error(f"Error applying command: {str(e)}")
+                    st.error(f'Error applying command: {str(e)}')
                     if get_counts:
                         results.append(pd.DataFrame())
                         counts.append(0)

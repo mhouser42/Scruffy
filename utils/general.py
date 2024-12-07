@@ -11,7 +11,7 @@ from config import CONFIG
 
 
 def get_image_as_base64(image_path: str) -> str:
-    with open(image_path, "rb") as f:
+    with open(image_path, 'rb') as f:
         return base64.b64encode(f.read()).decode()
 
 
@@ -20,7 +20,7 @@ def load_system_prompt() -> str:
         with open('data/system_prompt.md', 'r') as f:
             return f.read()
     except FileNotFoundError:
-        st.error("System prompt file not found.")
+        st.error('System prompt file not found.')
         return None
     except Exception as e:
         st.error(CONFIG['errors'].FILE_UPLOAD_ERROR.format(e))
@@ -28,10 +28,10 @@ def load_system_prompt() -> str:
 
 
 def load_example_schemas():
-    """
+    '''
     Loads schema examples from JSON files in the data/commands/example directory.
     Returns a dictionary mapping the filename (without extension) to the schema content.
-    """
+    '''
     examples = {}
     example_path = 'data/commands/example'
 
@@ -47,7 +47,7 @@ def load_example_schemas():
                     examples[key] = json.load(f)
         return examples
     except Exception as e:
-        st.error(f"Error loading example schemas: {str(e)}")
+        st.error(f'Error loading example schemas: {str(e)}')
         return {}
 
 
@@ -83,12 +83,12 @@ def get_OPS_mapping():
 
 def get_default_template():
     return {
-        "filename": "filter_data.csv",
-        "description": "Empty default JSON structure",
-        "filters": {
+        'filename': 'filter_data.csv',
+        'description': 'Empty default JSON structure',
+        'filters': {
 
         },
-        "scruff": {
+        'scruff': {
 
         }
     }
@@ -102,7 +102,7 @@ def error_handler(func):
         except Exception as e:
             error_type = type(e).__name__
             error_msg = str(e)
-            st.error(f"{error_type}: {error_msg}")
+            st.error(f'{error_type}: {error_msg}')
             return None
     return wrapper
 
@@ -113,7 +113,7 @@ def create_zip_of_all_versions():
         for version, df in st.session_state['dataframe_versions'].items():
             csv_buffer = io.StringIO()
             df.to_csv(csv_buffer, index=False)
-            zip_file.writestr(f"{version}", csv_buffer.getvalue())
+            zip_file.writestr(f'{version}', csv_buffer.getvalue())
     zip_buffer.seek(0)
     return zip_buffer
 

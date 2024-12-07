@@ -2,7 +2,7 @@
   <img src="assets/logo.png" alt="Scruffy the Data Janitor" width="200">
 </div>
 
-# Scruffy: SLM The Data Janitor  
+# Scruffy: The SLM Data Janitor  
 ##### `Scruffy 1.0.0-alpha`
 ## Serialized Data Transformation with Grammar-Constrained Small Language Models
 
@@ -117,7 +117,7 @@ conda activate scruffy
    ```bash
    echo "YOUR_ARLI_AI_API_KEY" > auth.txt
    ```
-   Replace "YOUR_ARLI_AI_API_KEY" with the one provided by Arli AI.
+   Replace 'YOUR_ARLI_AI_API_KEY' with the one provided by Arli AI.
    - **Secure the `auth.txt` File:**
 	   - Ensure that `auth.txt` is listed in your `.gitignore` file to prevent it from being tracked by Git.
 #### 6. Download NLTK Data (If Required)
@@ -137,9 +137,9 @@ Modify the `ScruffDefaults` class to set default values for all cleaning operati
   ```python
     COLUMN_OPTIONS: Dict[str, bool] = field(
         default_factory=lambda: {
-            "standardize_columns": True,     # Standardize column names to snake_case
-            "drop_empty_columns": False,     # Keep empty columns by default
-            "drop_duplicate_columns": True   # Remove duplicate columns
+            'standardize_columns': True,     # Standardize column names to snake_case
+            'drop_empty_columns': False,     # Keep empty columns by default
+            'drop_duplicate_columns': True   # Remove duplicate columns
         }
     )
 ```
@@ -149,35 +149,35 @@ Modify the `ScruffDefaults` class to set default values for all cleaning operati
     ```python
     ROW_OPTIONS: Dict[str, bool] = field(
         default_factory=lambda: {
-            "drop_na_rows": False,          # Keep rows with some NA values
-            "drop_duplicate_rows": True     # Remove duplicate rows
+            'drop_na_rows': False,          # Keep rows with some NA values
+            'drop_duplicate_rows': True     # Remove duplicate rows
         }
     )
     NA_THRESHOLD: int = 75                  # Drop rows with >75% missing values
     ```
     
-  3. **Numeric Data Options:** Configure numeric data processing
+3. **Numeric Data Options:** Configure numeric data processing
   ```python
     NUMERIC_OPTIONS: Dict[str, bool] = field(
         default_factory=lambda: {
-            "normalize_numeric": False,      # Don't normalize by default
-            "handle_outliers": False,        # Keep outliers by default
-            "fill_numeric_na": True         # Fill missing numeric values
+            'normalize_numeric': False,      # Don't normalize by default
+            'handle_outliers': False,        # Keep outliers by default
+            'fill_numeric_na': True         # Fill missing numeric values
         }
     )
     Z_SCORE_THRESHOLD: float = 3.0          # Standard outlier threshold
-    FILL_METHOD: str = "median"             # Use median for filling NA values
-    NUMERIC_CONVERSION: str = "None"         # No automatic type conversion
+    FILL_METHOD: str = 'median'             # Use median for filling NA values
+    NUMERIC_CONVERSION: str = 'None'         # No automatic type conversion
  ```
 4. **Text Processing Options:**
     ```python
     TEXT_OPTIONS: Dict[str, bool] = field(
       default_factory=lambda: {
-          "remove_accents": False,         # Keep accents by default
-          "to_lowercase": True,            # Convert to lowercase
-          "remove_special_chars": False,   # Keep special characters
-          "remove_stopwords": False,       # Keep stopwords
-          "lemmatize": False              # No lemmatization by default
+          'remove_accents': False,         # Keep accents by default
+          'to_lowercase': True,            # Convert to lowercase
+          'remove_special_chars': False,   # Keep special characters
+          'remove_stopwords': False,       # Keep stopwords
+          'lemmatize': False              # No lemmatization by default
       }
     )
    ```
@@ -269,29 +269,29 @@ Scruffy uses a JSON-based schema system to define data transformations. Below ar
 AND operations allow you to combine multiple conditions where all must be true. When working with different columns, conditions can be listed directly in the filters object - they will automatically be combined with AND logic. For columns that need multiple filters, an explicit AND clause prevents duplicate keys.
 
 ```json
-    {
-        "filename": "high_rated_episodes.csv",
-        "description": "Find episodes with high viewership directed by specific directors",
-        "filters": {
-            "Directed By": {
-                "op": "in",
-                "value": ["Rich Moore", "Peter Avanzino"]
-            },
-            "AND": [
-                {
-                    "U.S Viewers": {
-                        "op": ">=",
-                        "value": 10.0
-                    }
-                },
-                {
-                    "Air Date": {
-                        "op": "<=",
-                        "value": "1999-12-31"
-                    }
+{
+    "filename": "high_rated_episodes.csv",
+    "description": "Find episodes with high viewership directed by specific directors",
+    "filters": {
+        "Directed By": {
+            "op": "in",
+            "value": ["Rich Moore", "Peter Avanzino"]
+        },
+        "AND": [
+            {
+                "U.S Viewers": {
+                    "op": ">=",
+                    "value": 10.0
                 }
-            ]
-        }
+            },
+            {
+                "Air Date": {
+                    "op": "<=",
+                    "value": "1999-12-31"
+                }
+            }
+        ]
+    }
     }
 ```
 
@@ -301,42 +301,42 @@ OR operations let you specify alternative conditions where any one condition can
 
 ```json
 {
-	"filename": "filtered_episodes.csv",
-	"description": "Select episodes based on either high viewership or specific directors",
-	"filters": {
-		"Air Date": {
-			"op": ">=",
-			"value": "2000-01-01"
-		},
-		"OR": [
-			{
-				"U.S Viewers": {
-					"op": ">=",
-					"value": 8.0
-				}
-			},
-			{
-				"Directed By": {
-					"op": "in",
-					"value": ["Brian Sheesley", "Bret Haaland"]
-				}
-			}
-		],
-		"XOR": [
-			{
-				"Episode Title": {
-					"op": "contains",
-					"value": "Part 1"
-				}
-			},
-			{
-				"Episode Title": {
-					"op": "contains",
-					"value": "Part 2"
-				}
-			}
-		]
-	}
+    "filename": "filtered_episodes.csv",
+    "description": "Select episodes based on either high viewership or specific directors",
+    "filters": {
+        "Air Date": {
+            "op": ">=",
+            "value": "2000-01-01"
+        },
+        "OR": [
+            {
+                "U.S Viewers": {
+                    "op": ">=",
+                    "value": 8.0
+                }
+            },
+            {
+                "Directed By": {
+                    "op": "in",
+                    "value": ["Brian Sheesley", "Bret Haaland"]
+                }
+            }
+        ],
+        "XOR": [
+            {
+                "Episode Title": {
+                    "op": "contains",
+                    "value": "Part 1"
+                }
+            },
+            {
+                "Episode Title": {
+                    "op": "contains",
+                    "value": "Part 2"
+                }
+            }
+        ]
+    }
 }
 ```
 
@@ -346,34 +346,34 @@ For complex commands, you can nest conditional logic inside clauses. This allows
 
 ```json
 {
-	"filename": "complex_episode_filter.csv",
-	"description": "Select specific episodes based on complex viewership and director patterns",
-	"filters": {
-		"OR": [
-			{
-				"U.S Viewers": {
-					"op": ">",
-					"value": 15.0
-				}
-			},
-			{
-				"AND": [
-					{
-						"Directed By": {
-							"op": "contains",
-							"value": "Avanzino"
-						}
-					},
-					{
-						"U.S Viewers": {
-							"op": "between",
-							"value": [8.0, 12.0]
-						}
-					}
-				]
-			}
-		]
-	}
+    "filename": "complex_episode_filter.csv",
+    "description": "Select specific episodes based on complex viewership and director patterns",
+    "filters": {
+        "OR": [
+            {
+                "U.S Viewers": {
+                    "op": ">",
+                    "value": 15.0
+                }
+            },
+            {
+                "AND": [
+                    {
+                        "Directed By": {
+                            "op": "contains",
+                            "value": "Avanzino"
+                        }
+                    },
+                    {
+                        "U.S Viewers": {
+                            "op": "between",
+                            "value": [8.0, 12.0]
+                        }
+                    }
+                ]
+            }
+        ]
+    }
 }
 ```
 
@@ -414,24 +414,24 @@ You can combine filtering and cleaning in a single command, first selecting the 
 
 ```json
 {
-	"filename": "early_episodes_cleaned.csv",
-	"description": "Filter early episodes and clean data format",
-	"filters": {
-		"Air Date": {
-			"op": "<=",
-			"value": "2000-12-31"
-		},
-		"U.S Viewers": {
-			"op": "notna"
-		}
-	},
-	"scruff": {
-		"standardize_columns": true,
-		"normalize_numeric": true,
-		"fill_numeric_na": true,
-		"fill_method": "mean",
-		"remove_special_chars": true
-	}
+    "filename": "early_episodes_cleaned.csv",
+    "description": "Filter early episodes and clean data format",
+    "filters": {
+        "Air Date": {
+            "op": "<=",
+            "value": "2000-12-31"
+        },
+        "U.S Viewers": {
+            "op": "notna"
+        }
+    },
+    "scruff": {
+        "standardize_columns": true,
+        "normalize_numeric": true,
+        "fill_numeric_na": true,
+        "fill_method": "mean",
+        "remove_special_chars": true
+    }
 }
 ```
 
@@ -493,6 +493,11 @@ The grammar specifies:
 
 ### Command Object
 
+The root specifies the pattern for the overall output. Must be at beginning of file.
+```gbnf
+root ::= "[" ws? (command-object ws? ("," ws? command-object ws?)*)? ws? "]"
+```
+
 The base unit of a transformation schema:
 ```gbnf
 command-object ::= "{" ws?
@@ -526,7 +531,14 @@ Cleaning operation specifications:
 ```gbnf
 scruff-option ::= "\"" scruff-key "\"" ws? ":" ws? scruff-value
 
-scruff-key ::= "standardize_columns" | "drop_empty_columns" | "drop_duplicate_columns" |"drop_na_rows" | "drop_duplicate_rows" | "normalize_numeric" | "handle_outliers" | "z_score_threshold" | "fill_numeric_na" | "fill_method" | "clean_text" | "remove_accents" | "to_lowercase" | "remove_special_chars" | "remove_stopwords" | "lemmatize" | "excluded_columns" | "numeric_conversion" | "drop_na_threshold"
+scruff-key ::= "standardize_columns" | "drop_empty_columns" | "drop_duplicate_columns" |
+               "drop_na_rows" | "drop_duplicate_rows" | "normalize_numeric" |
+               "handle_outliers" | "z_score_threshold" | "fill_numeric_na" | "fill_method" |
+               "clean_text" | "remove_accents" | "to_lowercase" | "remove_special_chars" |
+               "remove_stopwords" | "lemmatize" | "excluded_columns" | "numeric_conversion" |
+               "drop_na_threshold"
+
+scruff-value ::= boolean | number | string | array | null
 ```
 
 # System Prompt Design
@@ -541,7 +553,7 @@ Each time a natural language query is processed, Scruffy automatically enhances 
 
 ```
 Current DataFrame Information:
-<class 'pandas.core.frame.DataFrame'>
+<class "pandas.core.frame.DataFrame">
 RangeIndex: 100 entries (0 to 99)
 Data columns (total 5 columns):
  #   Column         Non-Null Count  Dtype  
@@ -589,15 +601,15 @@ def update_system_prompt_with_df(self, df) -> None:
   
     column_context = self.get_column_context(df)  
   
-    context_str = "\nColumn Value Examples:\n"  
+    context_str = '\nColumn Value Examples:\n'  
     for column, values in column_context.items():  
-        context_str += f"{column}: {values}\n"  
+        context_str += f'{column}: {values}\n'  
   
     self._current_system_prompt = (  
             self._base_system_prompt +  
-            f"\n\nCurrent DataFrame Information:\n{df_info}\n" +  
-            f"\nDataFrame Shape: {df.shape}\n" +  
-            f"Column Names: {list(df.columns)}\n" +  
+            f'\n\nCurrent DataFrame Information:\n{df_info}\n' +  
+            f'\nDataFrame Shape: {df.shape}\n' +  
+            f'Column Names: {list(df.columns)}\n' +  
             context_str  
     )
 ```

@@ -46,7 +46,7 @@ def remove_versions(versions_to_remove, cannot_remove_message, last_version_mess
 def render_file_selection():
     versions = list(st.session_state['dataframe_versions'].keys())
     selected_version = st.selectbox(
-        "Choose file version:",
+        'Choose file version:',
         options=versions,
         key='df_version_selector',
         index=versions.index(st.session_state['selected_version'])
@@ -64,52 +64,52 @@ def render_file_selection():
 def render_file_info(selected_df):
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("#### Columns/Data Types:")
+        st.markdown('#### Columns/Data Types:')
         st.write(selected_df.dtypes)
-        st.write(f"Shape: {selected_df.shape}")
+        st.write(f'Shape: {selected_df.shape}')
     with col2:
         render_versioning_buttons()
 
 
 def render_versioning_buttons():
     st.markdown('#### Version Options:')
-    if create_action_button("Remove Current Version", key='remove_current_version'):
+    if create_action_button('Remove Current Version', key='remove_current_version'):
         selected_version = st.session_state['selected_version']
         remove_versions(
             [selected_version],
-            cannot_remove_message="Cannot remove the original version.",
-            last_version_message="Cannot remove the last remaining version."
+            cannot_remove_message='Cannot remove the original version.',
+            last_version_message='Cannot remove the last remaining version.'
         )
 
     current_df = st.session_state['scruffy'].curr_df
     create_download_button(
-        label="Download Current File",
+        label='Download Current File',
         data=current_df.to_csv(index=False),
-        file_name=f"{st.session_state['selected_version']}.csv",
+        file_name=f'{st.session_state['selected_version']}.csv',
         mime='text/csv',
         key='download_current'
     )
 
-    if create_action_button("Remove All Versions", key='remove_all_versions'):
+    if create_action_button('Remove All Versions', key='remove_all_versions'):
         versions = list(st.session_state['dataframe_versions'].keys())
         remove_versions(
             versions[1:],
-            cannot_remove_message="Cannot remove the original version.",
-            last_version_message="Only one version remains."
+            cannot_remove_message='Cannot remove the original version.',
+            last_version_message='Only one version remains.'
         )
 
     zip_buffer = create_zip_of_all_versions()
     create_download_button(
-        label="Download All Versions (ZIP)",
+        label='Download All Versions (ZIP)',
         data=zip_buffer.getvalue(),
-        file_name="all_versions.zip",
-        mime="application/zip",
+        file_name='all_versions.zip',
+        mime='application/zip',
         key='download_all_versions'
     )
 
 
 def render_file_preview(selected_df, version):
-    with st.expander("Preview of Selected Version", expanded=False):
+    with st.expander('Preview of Selected Version', expanded=False):
         st.dataframe(selected_df.astype(str).head())
 
 

@@ -25,22 +25,22 @@ def render_filter_group(df):
     def render_logical_operator(group, group_idx):
         if len(group['filters']) >= 1:
             group['logical_op'] = st.selectbox(
-                "",
+                '',
                 options=['AND', 'OR', 'XOR'],
-                key=f"logical_op_{group_idx}",
+                key=f'logical_op_{group_idx}',
                 index=['AND', 'OR', 'XOR'].index(group.get('logical_op', 'AND')),
-                help="Logical operator to combine filters"
+                help='Logical operator to combine filters'
             )
 
     def handle_add_filter(group, group_idx):
-        if st.button("➕ Add Filter", key=f"add_filter_{group_idx}"):
+        if st.button('➕ Add Filter', key=f'add_filter_{group_idx}'):
             current_filters = len(group['filters'])
             group['filters'].append({'column': None, 'op': None, 'value': None})
             if current_filters == 1 and group.get('logical_op') in ['OR', 'XOR']:
                 group['filters'].append({'column': None, 'op': None, 'value': None})
 
     def handle_remove_group(group_idx):
-        if st.button("❌ Remove Group", key=f"remove_group_{group_idx}"):
+        if st.button('❌ Remove Group', key=f'remove_group_{group_idx}'):
             st.session_state['filter_groups'].pop(group_idx)
 
     def render_filter_controls(filter_dict, df, group_idx, filter_idx):
@@ -68,14 +68,14 @@ def render_filter_group(df):
             if filter_dict['op'] not in ['isna', 'notna']:
                 render_value_input(filter_dict, df, f'{group_idx}_{filter_idx}')
             else:
-                st.text("No value needed for this operation")
+                st.text('No value needed for this operation')
 
         return filter_cols[3]
 
     def handle_remove_filter(group, group_idx, filter_idx, col):
         min_filters = 2 if group.get('logical_op') in ['OR', 'XOR'] else 1
         if len(group['filters']) > min_filters:
-            if col.button("❌", key=f"remove_filter_{group_idx}_{filter_idx}"):
+            if col.button('❌', key=f'remove_filter_{group_idx}_{filter_idx}'):
                 group['filters'].pop(filter_idx)
 
     def ensure_minimum_filters(group):
@@ -83,10 +83,10 @@ def render_filter_group(df):
             group['filters'].append({'column': None, 'op': None, 'value': None})
 
     initialize_session_state()
-    st.markdown("### Filter Groups")
+    st.markdown('### Filter Groups')
 
     for group_idx, group in enumerate(st.session_state['filter_groups']):
-        with st.expander(f"Filter Group {group_idx + 1}", expanded=True):
+        with st.expander(f'Filter Group {group_idx + 1}', expanded=True):
             cols = st.columns([1, 2, 1, 1])
 
             with cols[0]:
@@ -105,7 +105,7 @@ def render_filter_group(df):
 
             ensure_minimum_filters(group)
 
-    if st.button("➕ Add Filter Group", key='add_filter_group'):
+    if st.button('➕ Add Filter Group', key='add_filter_group'):
         st.session_state['filter_groups'].append({'filters': []})
     st.divider()
 
@@ -162,99 +162,99 @@ def render_value_input(filter_dict, df, key_suffix):
 
 
 def render_tab_content(title, description, example_key, examples):
-    """Renders a standard tab with title, description, and JSON example."""
-    st.markdown(f"### {title}")
+    '''Renders a standard tab with title, description, and JSON example.'''
+    st.markdown(f'### {title}')
     st.markdown(description)
     if example_key in examples:
         st.json(examples[example_key])
 
 
 def render_and_operations_tab(examples):
-    """Renders the Basic AND Operations tab content."""
+    '''Renders the Basic AND Operations tab content.'''
     render_tab_content(
-        "AND Operations",
-        """
+        'AND Operations',
+        '''
         AND operations combine multiple conditions that all must be true.
         When working with different columns, you can list conditions directly in the filters object - 
         they will automatically be combined with AND logic. If you are filtering the same column multiple times,
         an explict AND clause will be used to prevent duplicate keys in the JSON file.
-        """,
+        ''',
         'and_operations',
         examples
     )
 
 
 def render_or_xor_tab(examples):
-    """Renders the OR and XOR Operations tab content."""
+    '''Renders the OR and XOR Operations tab content.'''
     render_tab_content(
-        "OR and XOR Operations",
-        """
+        'OR and XOR Operations',
+        '''
         OR operations let you specify alternative conditions - any one condition can be true.
         XOR (exclusive OR) requires exactly one condition to be true, perfect for mutually exclusive categories.
-        """,
+        ''',
         'or_xor_operations',
         examples
     )
 
 
 def render_nested_operations_tab(examples):
-    """Renders the Nested Logical Operations tab content."""
+    '''Renders the Nested Logical Operations tab content.'''
     render_tab_content(
-        "Nested Logical Operations",
-        """
+        'Nested Logical Operations',
+        '''
         For more complex operations you can nest your conditional logic inside clauses.
         Use explicit AND arrays to group conditions together within OR and XOR operations.
-        """,
+        ''',
         'nested_operations',
         examples
     )
 
 
 def render_data_cleaning_tab(examples):
-    """Renders the Data Cleaning Operations tab content."""
+    '''Renders the Data Cleaning Operations tab content.'''
     render_tab_content(
-        "Data Cleaning Operations",
-        """
+        'Data Cleaning Operations',
+        '''
         Scruff operations help you clean and standardize your data.
         You can standardize column names, handle missing values, clean text data,
         and normalize numeric values - all in a single operation.
-        """,
+        ''',
         'scruffy_operations',
         examples
     )
 
 
 def render_combined_operations_tab(examples):
-    """Renders the Combined Filter & Clean tab content."""
+    '''Renders the Combined Filter & Clean tab content.'''
     render_tab_content(
-        "Combined Filter & Clean",
-        """
+        'Combined Filter & Clean',
+        '''
         You can combine filtering and cleaning in a single command.
         First filter your data to select the records you want,
         then apply cleaning operations to standardize and improve the filtered data.
-        """,
+        ''',
         'combined_filter_scruff',
         examples
     )
 
 
 def render_batch_processing_tab(examples):
-    """Renders the Batch Processing tab content."""
+    '''Renders the Batch Processing tab content.'''
     render_tab_content(
-        "Batch Processing",
-        """
+        'Batch Processing',
+        '''
         When you need multiple output files from the same input data,
         use an array of operations. Each operation creates its own output file,
         letting you generate multiple views of your data in one command.
-        """,
+        ''',
         'batch_processing',
         examples
     )
 
 
 def render_schema_examples(examples):
-    """Renders the schema examples section with tabs."""
-    st.markdown("""
+    '''Renders the schema examples section with tabs.'''
+    st.markdown('''
     ### Understanding Schema Operations
 
     Our schema system allows you to transform data through filtering and cleaning operations. 
@@ -266,15 +266,15 @@ def render_schema_examples(examples):
     - Apply data cleaning to standardize and improve data quality
     - Mix filtering and cleaning for complete data transformations
     - Process multiple outputs in a single command
-    """)
+    ''')
 
     tabs = st.tabs([
-        "Basic AND",
-        "OR & XOR",
-        "Nested Logic",
-        "Data Cleaning",
-        "Combined Ops",
-        "Batch Processing"
+        'Basic AND',
+        'OR & XOR',
+        'Nested Logic',
+        'Data Cleaning',
+        'Combined Ops',
+        'Batch Processing'
     ])
 
     tab_renderers = [
@@ -297,10 +297,10 @@ def render_command_sidebar():
 
         examples = load_example_schemas()
 
-        with st.expander("ℹ️ Schema Examples", expanded=False):
+        with st.expander('ℹ️ Schema Examples', expanded=False):
             render_schema_examples(examples)
 
-        uploaded_file = st.file_uploader("Upload Command Schema", type=['json'], key="schema_uploader")
+        uploaded_file = st.file_uploader('Upload Command Schema', type=['json'], key='schema_uploader')
         if uploaded_file is not None and 'last_uploaded_file' not in st.session_state:
             try:
                 uploaded_schema = json.load(uploaded_file)
@@ -308,48 +308,48 @@ def render_command_sidebar():
                     st.session_state['commands'] = uploaded_schema
                 else:
                     st.session_state['commands'] = [uploaded_schema]
-                st.success("Schema(s) uploaded successfully!")
+                st.success('Schema(s) uploaded successfully!')
                 st.session_state['last_uploaded_file'] = uploaded_file.name
             except json.JSONDecodeError:
-                st.error("Invalid JSON file")
+                st.error('Invalid JSON file')
             except Exception as e:
-                st.error(f"Error uploading file: {str(e)}")
+                st.error(f'Error uploading file: {str(e)}')
         elif uploaded_file is None and 'last_uploaded_file' in st.session_state:
             del st.session_state['last_uploaded_file']
 
         with st.container():
-            st.markdown("### Current Commands")
+            st.markdown('### Current Commands')
 
             if not st.session_state.get('commands'):
                 st.info(
-                    "No active commands. Click 'Add New Command' below to start, or use the Filter Builder or Natural Language tabs to generate commands.")
+                    'No active commands. Click "Add New Command" below to start, or use the Filter Builder or Natural Language tabs to generate commands.')
             else:
                 edit_commands_ui(st.session_state.get('df'))
 
-            st.markdown("---")
-            if st.button("➕ Add New Command"):
+            st.markdown('---')
+            if st.button('➕ Add New Command'):
                 st.session_state['commands'].append(get_default_template())
                 st.rerun()
-            st.markdown("---")
+            st.markdown('---')
             col1, col2, col3 = st.columns(3)
             with col1:
                 if st.session_state.get('commands'):
                     st.download_button(
-                        "💾 Save All",
+                        '💾 Save All',
                         data=json.dumps(st.session_state['commands'], indent=2),
-                        file_name="all_commands.json",
+                        file_name='all_commands.json',
                         mime='application/json',
                         key='download_all_commands'
                     )
             with col2:
-                if st.button("🗑️ Delete All"):
+                if st.button('🗑️ Delete All'):
                     st.session_state['commands'] = []
                     st.session_state['result_df'] = None
                     st.session_state['counts'] = None
                     st.session_state['commands_executed'] = False
 
             with col3:
-                if st.button("▶️ Execute All"):
+                if st.button('▶️ Execute All'):
                     if st.session_state.get('commands') and st.session_state.get('df') is not None:
                         with st.spinner('Executing commands...'):
                             results, counts = st.session_state['scruffy'].apply_commands(
@@ -368,7 +368,7 @@ def render_command_sidebar():
 
 def edit_commands_ui(df):
     for i, command in enumerate(st.session_state.get('commands', [])):
-        st.markdown(f"### Command {i + 1}")
+        st.markdown(f'### Command {i + 1}')
 
         with st.form(key=f'command_form_{i}'):
             command_str = json.dumps(command, indent=2)
@@ -376,8 +376,8 @@ def edit_commands_ui(df):
 
             edited_command_str = st_ace(
                 value=command_str,
-                language="json",
-                theme="github",
+                language='json',
+                theme='github',
                 key=f'command_editor_{i}',
                 height=height,
                 auto_update=False
@@ -409,9 +409,9 @@ def edit_commands_ui(df):
                                 st.session_state['command_results'][i] = result_df
                                 st.success('Command executed successfully')
                 except json.JSONDecodeError as e:
-                    st.error(f"Invalid JSON: {str(e)}")
+                    st.error(f'Invalid JSON: {str(e)}')
                 except Exception as e:
-                    st.error(f"Error executing command: {str(e)}")
+                    st.error(f'Error executing command: {str(e)}')
 
         col1, col2 = st.columns([1, 3])
         with col1:
@@ -419,7 +419,7 @@ def edit_commands_ui(df):
                 edited_command = json.loads(edited_command_str)
                 filename = edited_command.get('filename', f'command_{i}.json').rsplit('.', 1)[0] + '.json'
                 st.download_button(
-                    "💾 Save",
+                    '💾 Save',
                     data=json.dumps(edited_command, indent=2),
                     file_name=filename,
                     mime='application/json',

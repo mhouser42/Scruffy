@@ -24,7 +24,7 @@ def handle_file_upload():
                 st.session_state['uploaded_filename'] = uploaded_file.name
             return True
         except Exception as e:
-            st.error(f"Error uploading file: {str(e)}")
+            st.error(f'Error uploading file: {str(e)}')
     return False
 
 if __name__ == '__main__':
