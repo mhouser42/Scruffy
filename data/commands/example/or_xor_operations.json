@@ -1,0 +1,40 @@
+[
+    {
+        "filename": "filtered_episodes.csv",
+        "description": "Select episodes based on either high viewership or specific directors",
+        "filters": {
+            "Air Date": {
+                "op": ">=",
+                "value": "2000-01-01"
+            },
+            "OR": [
+                {
+                    "U.S Viewers": {
+                        "op": ">=",
+                        "value": 8.0
+                    }
+                },
+                {
+                    "Directed By": {
+                        "op": "in",
+                        "value": ["Brian Sheesley", "Bret Haaland"]
+                    }
+                }
+            ],
+            "XOR": [
+                {
+                    "Episode Title": {
+                        "op": "contains",
+                        "value": "Part 1"
+                    }
+                },
+                {
+                    "Episode Title": {
+                        "op": "contains",
+                        "value": "Part 2"
+                    }
+                }
+            ]
+        }
+    }
+]

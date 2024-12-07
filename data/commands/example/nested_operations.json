@@ -1,0 +1,32 @@
+[
+    {
+        "filename": "complex_episode_filter.csv",
+        "description": "Select specific episodes based on complex viewership and director patterns",
+        "filters": {
+            "OR": [
+                {
+                    "U.S Viewers": {
+                        "op": ">",
+                        "value": 15.0
+                    }
+                },
+                {
+                    "AND": [
+                        {
+                            "Directed By": {
+                                "op": "contains",
+                                "value": "Avanzino"
+                            }
+                        },
+                        {
+                            "U.S Viewers": {
+                                "op": "between",
+                                "value": [8.0, 12.0]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+]

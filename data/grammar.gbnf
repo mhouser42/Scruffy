@@ -1,0 +1,68 @@
+root ::= "[" ws? (command-object ws? ("," ws? command-object ws?)*)? ws? "]"
+
+command-object ::= "{" ws?
+    "\"filename\"" ws? ":" ws? string ws? "," ws?
+    "\"description\"" ws? ":" ws? string
+    (ws? "," ws? filters-section)?
+    (ws? "," ws? scruff-section)?
+ws? "}"
+
+filters-section ::= "\"filters\"" ws? ":" ws? filter-conditions
+
+scruff-section ::= "\"scruff\"" ws? ":" ws? scruff-options
+
+filter-conditions ::= "{" ws?
+    (simple-filter | logical-filter)
+    (ws? "," ws? (simple-filter | logical-filter))*
+ws? "}"
+
+scruff-options ::= "{" ws?
+    (scruff-option (ws? "," ws? scruff-option)*)?
+ws? "}"
+
+scruff-option ::= "\"" scruff-key "\"" ws? ":" ws? scruff-value
+
+scruff-key ::= "standardize_columns" | "drop_empty_columns" | "drop_duplicate_columns" |
+               "drop_na_rows" | "drop_duplicate_rows" | "normalize_numeric" |
+               "handle_outliers" | "z_score_threshold" | "fill_numeric_na" | "fill_method" |
+               "clean_text" | "remove_accents" | "to_lowercase" | "remove_special_chars" |
+               "remove_stopwords" | "lemmatize" | "excluded_columns" | "numeric_conversion" |
+               "drop_na_threshold"
+
+scruff-value ::= boolean | number | string | array | null
+
+boolean ::= "true" | "false"
+
+array ::= "[" ws? (value (ws? "," ws? value)*)? ws? "]"
+
+value ::= string | number | boolean | null | array
+
+simple-filter ::= "\"" column-name "\"" ws? ":" ws? operation-object
+
+logical-filter ::=
+    ("\"AND\"" ws? ":" ws? "[" ws? filter-list ws? "]") |
+    ("\"OR\"" ws? ":" ws? "[" ws? filter-list ws? "]") |
+    ("\"XOR\"" ws? ":" ws? "[" ws? filter-list ws? "]")
+
+filter-list ::= "{" ws? (simple-filter | logical-filter) ws? "}"
+    (ws? "," ws? "{" ws? (simple-filter | logical-filter) ws? "}")*
+
+operation-object ::= "{" ws?
+    "\"op\"" ws? ":" ws? operation-type
+    (ws? "," ws? "\"value\"" ws? ":" ws? value)?
+ws? "}"
+
+operation-type ::= "\"==\"" | "\"!=\"" | "\"<\"" | "\"<=\"" | "\">\"" | "\">=\"" |
+    "\"in\"" | "\"not in\"" | "\"isna\"" | "\"notna\"" | "\"between\"" |
+    "\"contains\"" | "\"+\"" | "\"-\"" | "\"*\"" | "\"/\"" | "\"//\"" |
+    "\"%\"" | "\"**\"" | "\"&\"" | "\"|\"" | "\"^\"" | "\"~\"" | "\"<<\"" | "\">>\""
+
+column-name ::= string
+
+string ::= "\"" ([^"\\\n] | "\\" ["\\bfnrt"/\\])* "\""
+
+number ::= "-"? ([0-9] | [1-9][0-9]*) ("." [0-9]+)? ([eE][-+]?[0-9]+)?
+
+null ::= "null"
+
+ws ::= [ \t\n\r]+

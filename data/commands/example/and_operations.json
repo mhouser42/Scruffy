@@ -1,0 +1,26 @@
+[
+    {
+        "filename": "high_rated_episodes.csv",
+        "description": "Find episodes with high viewership directed by specific directors",
+        "filters": {
+            "Directed By": {
+                "op": "in",
+                "value": ["Rich Moore", "Peter Avanzino"]
+            },
+            "AND": [
+                {
+                    "U.S Viewers": {
+                        "op": ">=",
+                        "value": 10.0
+                    }
+                },
+                {
+                    "Air Date": {
+                        "op": "<=",
+                        "value": "1999-12-31"
+                    }
+                }
+            ]
+        }
+    }
+]

@@ -1,0 +1,216 @@
+[
+    {
+        "filename": "high_rated_episodes.csv",
+        "description": "Find episodes with high viewership directed by specific directors",
+        "filters": {
+            "Directed By": {
+                "op": "in",
+                "value": [
+                    "Rich Moore",
+                    "Peter Avanzino"
+                ]
+            },
+            "AND": [
+                {
+                    "U.S Viewers": {
+                        "op": ">=",
+                        "value": 10.0
+                    }
+                },
+                {
+                    "Air Date": {
+                        "op": "<=",
+                        "value": "1999-12-31"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "filename": "subscription_analysis.csv",
+        "description": "Filter subscribers based on their plan types and payment methods",
+        "filters": {
+            "is_subscribed": {
+                "op": "==",
+                "value": true
+            },
+            "OR": [
+                {
+                    "total_spent": {
+                        "op": ">=",
+                        "value": 1000
+                    }
+                },
+                {
+                    "subscription_length": {
+                        "op": ">=",
+                        "value": 12
+                    }
+                }
+            ],
+            "XOR": [
+                {
+                    "payment_method": {
+                        "op": "==",
+                        "value": "annual"
+                    }
+                },
+                {
+                    "payment_method": {
+                        "op": "==",
+                        "value": "monthly"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "filename": "complex_episode_filter.csv",
+        "description": "Select specific episodes based on complex viewership and director patterns",
+        "filters": {
+            "OR": [
+                {
+                    "U.S Viewers": {
+                        "op": ">",
+                        "value": 15.0
+                    }
+                },
+                {
+                    "AND": [
+                        {
+                            "Directed By": {
+                                "op": "contains",
+                                "value": "Avanzino"
+                            }
+                        },
+                        {
+                            "U.S Viewers": {
+                                "op": "between",
+                                "value": [
+                                    8.0,
+                                    12.0
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "filename": "cleaned_futurama.csv",
+        "description": "Clean and standardize Futurama episode data using default settings",
+        "scruff": {
+            "standardize_columns": true,
+            "drop_empty_columns": false,
+            "drop_duplicate_columns": true,
+            "drop_na_rows": false,
+            "drop_na_threshold": 50,
+            "drop_duplicate_rows": true,
+            "normalize_numeric": false,
+            "handle_outliers": false,
+            "z_score_threshold": 3.0,
+            "fill_numeric_na": true,
+            "fill_method": "median",
+            "remove_accents": false,
+            "to_lowercase": true,
+            "remove_special_chars": false,
+            "remove_stopwords": false,
+            "lemmatize": false,
+            "excluded_columns": [
+                "Episode Title",
+                "Air Date"
+            ],
+            "numeric_conversion": "None"
+        }
+    },
+    {
+        "filename": "early_episodes_cleaned.csv",
+        "description": "Filter early episodes and clean data format",
+        "filters": {
+            "Air Date": {
+                "op": "<=",
+                "value": "2000-12-31"
+            },
+            "U.S Viewers": {
+                "op": "notna"
+            }
+        },
+        "scruff": {
+            "standardize_columns": true,
+            "normalize_numeric": true,
+            "fill_numeric_na": true,
+            "fill_method": "mean",
+            "remove_special_chars": true
+        }
+    },
+    {
+        "filename": "high_viewership.csv",
+        "description": "Episodes with over 10 million viewers",
+        "filters": {
+            "U.S Viewers": {
+                "op": ">=",
+                "value": 10.0
+            }
+        },
+        "scruff": {
+            "standardize_columns": true,
+            "normalize_numeric": true
+        }
+    },
+    {
+        "filename": "rich_moore_episodes.csv",
+        "description": "Episodes directed by Rich Moore",
+        "filters": {
+            "Directed By": {
+                "op": "contains",
+                "value": "Rich Moore"
+            }
+        },
+        "scruff": {
+            "standardize_columns": true,
+            "normalize_numeric": true
+        }
+    },
+    {
+        "filename": "filtered_episodes.csv",
+        "description": "Select episodes based on either high viewership or specific directors",
+        "filters": {
+            "Air Date": {
+                "op": ">=",
+                "value": "2000-01-01"
+            },
+            "OR": [
+                {
+                    "U.S Viewers": {
+                        "op": ">=",
+                        "value": 8.0
+                    }
+                },
+                {
+                    "Directed By": {
+                        "op": "in",
+                        "value": [
+                            "Brian Sheesley",
+                            "Bret Haaland"
+                        ]
+                    }
+                }
+            ],
+            "XOR": [
+                {
+                    "Episode Title": {
+                        "op": "contains",
+                        "value": "Part 1"
+                    }
+                },
+                {
+                    "Episode Title": {
+                        "op": "contains",
+                        "value": "Part 2"
+                    }
+                }
+            ]
+        }
+    }
+]

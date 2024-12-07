@@ -1,0 +1,22 @@
+[
+    {
+        "filename": "early_episodes_cleaned.csv",
+        "description": "Filter early episodes and clean data format",
+        "filters": {
+            "Air Date": {
+                "op": "<=",
+                "value": "2000-12-31"
+            },
+            "U.S Viewers": {
+                "op": "notna"
+            }
+        },
+        "scruff": {
+            "standardize_columns": true,
+            "normalize_numeric": true,
+            "fill_numeric_na": true,
+            "fill_method": "mean",
+            "remove_special_chars": true
+        }
+    }
+]

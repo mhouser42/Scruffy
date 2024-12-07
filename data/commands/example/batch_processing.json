@@ -1,0 +1,30 @@
+[
+    {
+        "filename": "high_viewership.csv",
+        "description": "Episodes with over 10 million viewers",
+        "filters": {
+            "U.S Viewers": {
+                "op": ">=",
+                "value": 10.0
+            }
+        },
+        "scruff": {
+            "standardize_columns": true,
+            "normalize_numeric": true
+        }
+    },
+    {
+        "filename": "rich_moore_episodes.csv",
+        "description": "Episodes directed by Rich Moore",
+        "filters": {
+            "Directed By": {
+                "op": "contains",
+                "value": "Rich Moore"
+            }
+        },
+        "scruff": {
+            "standardize_columns": true,
+            "normalize_numeric": true
+        }
+    }
+]
