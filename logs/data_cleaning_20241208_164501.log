@@ -1,0 +1,6 @@
+2024-12-08 16:45:08,621 - data_cleaning - INFO - Data Info - Initial Load:
+2024-12-08 16:45:08,622 - data_cleaning - INFO -   operation: Initial Load
+2024-12-08 16:45:08,622 - data_cleaning - INFO -   shape: (100, 5)
+2024-12-08 16:45:08,623 - data_cleaning - INFO -   columns: ['Unnamed: 0', 'Episode Title', 'Directed By', 'Air Date', 'U.S Viewers']
+2024-12-08 16:45:08,623 - data_cleaning - INFO -   na_counts: {'Unnamed: 0': 0, 'Episode Title': 0, 'Directed By': 0, 'Air Date': 0, 'U.S Viewers': 16}
+2024-12-08 16:45:08,623 - data_cleaning - INFO -   memory_usage: 0.02 MB
