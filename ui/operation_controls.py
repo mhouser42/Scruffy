@@ -85,7 +85,7 @@ def render_versioning_buttons():
     create_download_button(
         label='Download Current File',
         data=current_df.to_csv(index=False),
-        file_name=f'{st.session_state['selected_version']}.csv',
+        file_name=f'{st.session_state["selected_version"]}.csv',
         mime='text/csv',
         key='download_current'
     )

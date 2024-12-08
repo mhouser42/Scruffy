@@ -117,7 +117,7 @@ conda activate scruffy
    ```bash
    echo <YOUR_ARLI_AI_API_KEY> > auth.txt
    ```
-   Replace 'YOUR_ARLI_AI_API_KEY' with the one provided by Arli AI.
+   Replace `<YOUR_ARLI_AI_API_KEY>` with the one provided by Arli AI.
    - **Secure the `auth.txt` File:**
 	   - Ensure that `auth.txt` is listed in your `.gitignore` file to prevent it from being tracked by Git.
 #### 6. Download NLTK Data (If Required)

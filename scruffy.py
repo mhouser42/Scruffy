@@ -316,7 +316,7 @@ class Vacuum:
         dfs = []
         counts = [] if get_counts else None
         for command in commands:
-            filename = command.get('filename', f'{command.get('description', 'no_description')}.csv')
+            filename = command.get('filename', f'{command.get("description", "no_description")}.csv')
             description = command.get('description', 'No description provided')
             result = self.apply_command(df, command=command, get_count=get_counts)
             if get_counts:
@@ -659,7 +659,7 @@ class Scruffy:
     def apply_command(self, command, df=None):
         current_df = self._get_current_df()
         df_to_use = df if df is not None else current_df
-        self.logger.log_data_info(df_to_use, f'Before Command: {command.get('filename', 'Unnamed')}')
+        self.logger.log_data_info(df_to_use, f'Before Command: {command.get("filename", "Unnamed")}')
 
         # Handle 'scruff' operations
         scruff_options = command.get('scruff')
@@ -674,7 +674,7 @@ class Scruffy:
             result = df_to_use
 
         self.logger.log_operation_result(
-            f'Command: {command.get('filename', 'Unnamed')}',
+            f'Command: {command.get("filename", "Unnamed")}',
             df_to_use.shape,
             result.shape,
             details=command
@@ -684,7 +684,7 @@ class Scruffy:
             self.curr_df = result.copy()
             self.history.append(('command', command))
 
-            version_name = command.get('filename', 'unnamed_command.csv')
+            version_name = command.get("filename", "unnamed_command.csv")
             self.dataframe_versions[version_name] = result.copy()
             st.session_state['dataframe_versions'] = self.dataframe_versions
             st.session_state['selected_version'] = version_name
