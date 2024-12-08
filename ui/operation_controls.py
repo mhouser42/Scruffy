@@ -73,24 +73,27 @@ def render_file_info(selected_df):
 
 def render_versioning_buttons():
     st.markdown('#### Version Options:')
-    if create_action_button('Remove Current Version', key='remove_current_version'):
-        selected_version = st.session_state['selected_version']
+
+    selected_version = st.session_state['selected_version']
+    current_df = st.session_state['dataframe_versions'][selected_version]
+    version_key = selected_version.replace('.', '_').replace(' ', '_')
+
+    if create_action_button('Remove Current Version', key=f'remove_current_{version_key}'):
         remove_versions(
             [selected_version],
             cannot_remove_message='Cannot remove the original version.',
             last_version_message='Cannot remove the last remaining version.'
         )
 
-    current_df = st.session_state['scruffy'].curr_df
     create_download_button(
         label='Download Current File',
         data=current_df.to_csv(index=False),
-        file_name=f'{st.session_state["selected_version"]}.csv',
+        file_name=f'{selected_version}.csv',
         mime='text/csv',
-        key='download_current'
+        key=f'download_current_{version_key}'
     )
 
-    if create_action_button('Remove All Versions', key='remove_all_versions'):
+    if create_action_button('Remove All Versions', key=f'remove_all_{version_key}'):
         versions = list(st.session_state['dataframe_versions'].keys())
         remove_versions(
             versions[1:],
@@ -104,13 +107,25 @@ def render_versioning_buttons():
         data=zip_buffer.getvalue(),
         file_name='all_versions.zip',
         mime='application/zip',
-        key='download_all_versions'
+        key=f'download_all_{version_key}'
     )
 
-
 def render_file_preview(selected_df, version):
+    print("\n=== RENDER FILE PREVIEW START ===")
+    print(f"Version being previewed: {version}")
+    print(f"Selected DF shape: {selected_df.shape}")
+
     with st.expander('Preview of Selected Version', expanded=False):
-        st.dataframe(selected_df.astype(str).head())
+        if version in st.session_state['dataframe_versions']:
+            preview_df = st.session_state['dataframe_versions'][version].copy()
+            print(f"Preview DF shape: {preview_df.shape}")
+            for col in preview_df.select_dtypes(['object']):
+                preview_df[col] = preview_df[col].astype(str)
+            st.dataframe(preview_df.head())
+        else:
+            print(f"Version {version} not found in dataframe_versions")
+            st.write("No preview available for this version")
+    print("=== RENDER FILE PREVIEW END ===\n")
 
 
 def render_operation_tabs(selected_df):

@@ -208,39 +208,29 @@ class Vacuum:
             '>>': operator.rshift
         }
 
+    def _convert_date_series(self, series, value):
+        try:
+            series = pd.to_datetime(series, format='mixed')
+            value = pd.to_datetime(value)
+            return series, value, True
+        except:
+            return series, value, False
+
     def apply_filter(self, df, column, condition):
         if column not in df.columns:
             raise ValueError(f'Column "{column}" not found in DataFrame.')
+
         op = condition['op']
         value = condition.get('value')
+
         if op not in self.OPS:
             raise ValueError(f'Unsupported operation "{op}"')
+
         series = df[column]
-        if op not in ['isna', 'notna']:
-            if pd.api.types.is_numeric_dtype(series):
-                if isinstance(value, list):
-                    try:
-                        value = [float(v) for v in value]
-                    except ValueError:
-                        raise ValueError(f'Cannot convert values {value} to float for numeric column "{column}".')
-                else:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        raise ValueError(f'Cannot convert value "{value}" to float for numeric column "{column}".')
-            elif pd.api.types.is_datetime64_any_dtype(series):
-                if isinstance(value, list):
-                    try:
-                        value = [pd.to_datetime(v) for v in value]
-                    except ValueError:
-                        raise ValueError(f'Cannot convert values {value} to datetime for column "{column}".')
-                else:
-                    try:
-                        value = pd.to_datetime(value)
-                    except ValueError:
-                        raise ValueError(f'Cannot convert value "{value}" to datetime for column "{column}".')
-            elif pd.api.types.is_string_dtype(series):
-                value = str(value)
+
+        if 'date' in column.lower():
+            series, value, is_date = self._convert_date_series(series, value)
+
         if op in ['isna', 'notna']:
             return self.OPS[op](series)
         elif value is not None:
@@ -659,39 +649,25 @@ class Scruffy:
     def apply_command(self, command, df=None):
         current_df = self._get_current_df()
         df_to_use = df if df is not None else current_df
-        self.logger.log_data_info(df_to_use, f'Before Command: {command.get("filename", "Unnamed")}')
 
-        # Handle 'scruff' operations
         scruff_options = command.get('scruff')
         if scruff_options:
             df_to_use = self.broom.scruff(df_to_use, options=scruff_options)
 
-        # Handle 'filters' operations
         filters = command.get('filters')
         if filters:
             result = self.vacuum.apply_command(df_to_use, command)
         else:
             result = df_to_use
 
-        self.logger.log_operation_result(
-            f'Command: {command.get("filename", "Unnamed")}',
-            df_to_use.shape,
-            result.shape,
-            details=command
-        )
-
         if df is None:
-            self.curr_df = result.copy()
-            self.history.append(('command', command))
-
-            version_name = command.get("filename", "unnamed_command.csv")
-            self.dataframe_versions[version_name] = result.copy()
+            version_name = command.get('filename', 'unnamed_command.csv')
+            self.dataframe_versions[version_name] = result
             st.session_state['dataframe_versions'] = self.dataframe_versions
             st.session_state['selected_version'] = version_name
-
+            st.session_state['df'] = result
             self._update_system_prompt(result)
-            if not result.equals(current_df):
-                st.rerun()
+            st.rerun()
 
         return result
 
@@ -703,12 +679,10 @@ class Scruffy:
         for command in commands:
             df_to_use = current_df.copy()
 
-            # Handle 'scruff' operations
             scruff_options = command.get('scruff')
             if scruff_options:
                 df_to_use = self.broom.scruff(df_to_use, options=scruff_options)
 
-            # Handle 'filters' operations
             filters = command.get('filters')
             if filters:
                 try:
