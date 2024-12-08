@@ -115,7 +115,7 @@ conda activate scruffy
    - Obtain an API Key by signing up at [Arli AI](https://www.arliai.com/quick-start)
    - Create a file named `auth.txt` in the project root directory, and paste your API key into it.
    ```bash
-   echo "YOUR_ARLI_AI_API_KEY" > auth.txt
+   echo <YOUR_ARLI_AI_API_KEY> > auth.txt
    ```
    Replace 'YOUR_ARLI_AI_API_KEY' with the one provided by Arli AI.
    - **Secure the `auth.txt` File:**
