@@ -16,12 +16,13 @@ def handle_file_upload():
     uploaded_file = st.file_uploader('📁 Upload your CSV file', type=['csv'])
     if uploaded_file:
         try:
-            if 'uploaded_filename' not in st.session_state or st.session_state['uploaded_filename'] != uploaded_file.name:
-                df = pd.read_csv(uploaded_file)
-                scruffy = st.session_state['scruffy']
-                scruffy.load_data(df, uploaded_file.name)
-                st.session_state['df'] = df
-                st.session_state['uploaded_filename'] = uploaded_file.name
+            df = pd.read_csv(uploaded_file)
+            from version_control.controller import VersionController
+            vc = VersionController()
+            vc.load_from_session()
+            vc.add_uploaded_file(uploaded_file.name, df)
+            st.session_state['df'] = df
+            st.session_state['uploaded_filename'] = uploaded_file.name
             return True
         except Exception as e:
             st.error(f'Error uploading file: {str(e)}')

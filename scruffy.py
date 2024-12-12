@@ -1,3 +1,10 @@
+import pandas as pd
+import numpy as np
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+import requests
+import streamlit as st
 import json
 import os
 import io
@@ -8,18 +15,8 @@ import re
 import operator
 import unicodedata
 from typing import Dict, Any, List, Optional
-
-import pandas as pd
-import numpy as np
-
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-
-import requests
-import streamlit as st
-
 from config import CONFIG
+
 
 class Broom:
     def __init__(self):
@@ -100,11 +97,6 @@ class Broom:
             df = df.dropna(axis=1, how='all')
         if options.get('drop_duplicate_columns'):
             df = df.loc[:, ~df.columns.duplicated()]
-        excluded_columns = options.get('excluded_columns', [])
-        if excluded_columns:
-            columns_to_process = [col for col in df.columns if col not in excluded_columns]
-        else:
-            columns_to_process = df.columns.tolist()
         return df
 
     def _handle_row_operations(self, df, options):
@@ -171,9 +163,7 @@ class Broom:
         cleaned_df = self._handle_row_operations(cleaned_df, options)
         cleaned_df = self._handle_numeric_operations(cleaned_df, options)
         cleaned_df = self._handle_text_operations(cleaned_df, options)
-
         return cleaned_df
-
 
 class Vacuum:
     def __init__(self):
@@ -219,18 +209,13 @@ class Vacuum:
     def apply_filter(self, df, column, condition):
         if column not in df.columns:
             raise ValueError(f'Column "{column}" not found in DataFrame.')
-
         op = condition['op']
         value = condition.get('value')
-
         if op not in self.OPS:
             raise ValueError(f'Unsupported operation "{op}"')
-
         series = df[column]
-
         if 'date' in column.lower():
             series, value, is_date = self._convert_date_series(series, value)
-
         if op in ['isna', 'notna']:
             return self.OPS[op](series)
         elif value is not None:
@@ -325,7 +310,6 @@ class Vacuum:
                 filter_df.to_csv(output_path, index=False)
         return (dfs, counts) if get_counts else dfs
 
-
 class LLMHandler:
     def __init__(self):
         self.api_key = self._load_token()
@@ -340,26 +324,17 @@ class LLMHandler:
         self.load_system_prompt()
 
     def _load_token(self) -> str:
-        try:
-            with open('auth.txt', 'r') as f:
-                return f.read().strip()
-        except FileNotFoundError:
-            raise FileNotFoundError('auth.txt file not found. Please provide your Arliai API token in auth.txt.')
+        with open('auth.txt', 'r') as f:
+            return f.read().strip()
 
     def _load_grammar(self) -> str:
-        try:
-            with open('data/grammar.gbnf', 'r') as f:
-                return f.read()
-        except FileNotFoundError:
-            raise FileNotFoundError('grammar.gbnf not found in data directory.')
+        with open('data/grammar.gbnf', 'r') as f:
+            return f.read()
 
     def load_system_prompt(self) -> None:
-        try:
-            with open('data/system_prompt.md', 'r') as f:
-                self._base_system_prompt = f.read()
-                self._current_system_prompt = self._base_system_prompt
-        except FileNotFoundError:
-            raise FileNotFoundError('system_prompt.md not found in data directory.')
+        with open('data/system_prompt.md', 'r') as f:
+            self._base_system_prompt = f.read()
+            self._current_system_prompt = self._base_system_prompt
 
     def get_column_context(self, df, max_samples=5):
         context = {}
@@ -375,17 +350,13 @@ class LLMHandler:
     def update_system_prompt_with_df(self, df) -> None:
         if df is None:
             return
-
         buffer = io.StringIO()
         df.info(buf=buffer)
         df_info = buffer.getvalue()
-
         column_context = self.get_column_context(df)
-
         context_str = '\nColumn Value Examples:\n'
         for column, values in column_context.items():
             context_str += f'{column}: {values}\n'
-
         self._current_system_prompt = (
                 self._base_system_prompt +
                 f'\n\nCurrent DataFrame Information:\n{df_info}\n' +
@@ -399,104 +370,79 @@ class LLMHandler:
         return self._current_system_prompt
 
     def generate_response(self, user_input: str) -> List[Dict[str, Any]]:
-        try:
-            payload = {
-                'model': self.model,
-                'messages': [
-                    {'role': 'system', 'content': self._current_system_prompt},
-                    {'role': 'user', 'content': user_input}
-                ],
-                'temperature': 0.2,
-                'top_p': 0.9,
-                'top_k': 40,
-                'max_tokens': 1024,
-                'repetition_penalty': 1.1,
-            }
-
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.api_key}'
-            }
-
-            response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            if response.status_code != 200:
-                error_message = f'API command failed: {response.status_code}'
-                try:
-                    error_detail = response.json()
-                    error_message += f' - {error_detail}'
-                except:
-                    error_message += f' - {response.text}'
-                raise ValueError(error_message)
-
-            content = response.json()['choices'][0]['message']['content']
-
+        payload = {
+            'model': self.model,
+            'messages': [
+                {'role': 'system', 'content': self._current_system_prompt},
+                {'role': 'user', 'content': user_input}
+            ],
+            'temperature': 0.2,
+            'top_p': 0.9,
+            'top_k': 40,
+            'max_tokens': 1024,
+            'repetition_penalty': 1.1,
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.api_key}'
+        }
+        response = requests.post(
+            self.api_url,
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        if response.status_code != 200:
+            error_message = f'API command failed: {response.status_code}'
             try:
-                return json.loads(content)
-            except json.JSONDecodeError as e:
-                import re
-                json_match = re.search(r'\[.*\]', content, re.DOTALL)
-                if json_match:
-                    return json.loads(json_match.group())
-                else:
-                    raise ValueError('No valid JSON array found in response')
-
-
-        except requests.exceptions.RequestException as e:
-            raise ValueError(f'Network error: {str(e)}')
-        except Exception as e:
-            raise ValueError(f'Failed to generate response: {str(e)}')
+                error_detail = response.json()
+                error_message += f' - {error_detail}'
+            except:
+                error_message += f' - {response.text}'
+            raise ValueError(error_message)
+        content = response.json()['choices'][0]['message']['content']
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            import re
+            json_match = re.search(r'\[.*\]', content, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+            else:
+                raise ValueError('No valid JSON array found in response')
 
 class DataLogger:
     _instance = None
-
     def __new__(cls, name: str = 'data_cleaning'):
         if cls._instance is None:
             cls._instance = super(DataLogger, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
-
     def __init__(self, name: str = 'data_cleaning'):
         if not self._initialized:
             self.logger = self._setup_logger(name)
             self._initialized = True
-
     def _setup_logger(self, name: str) -> logging.Logger:
         logger = logging.getLogger(name)
-
         if logger.hasHandlers():
             logger.handlers.clear()
-
         logger.setLevel(logging.INFO)
-
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
-
         current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
         file_handler = logging.FileHandler(f'logs/data_cleaning_{current_time}.log')
         file_handler.setLevel(logging.INFO)
-
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         console_handler.setFormatter(formatter)
         file_handler.setFormatter(formatter)
-
         logger.addHandler(console_handler)
         logger.addHandler(file_handler)
-
         return logger
-
     def log_data_info(self, df: pd.DataFrame, operation_name: str) -> None:
         log_id = f'{operation_name}_{df.shape}'
-
         if hasattr(self, '_last_log_id') and self._last_log_id == log_id:
             return
-
         self._last_log_id = log_id
-
         info = {
             'operation': operation_name,
             'shape': df.shape,
@@ -507,19 +453,13 @@ class DataLogger:
         self.logger.info(f'Data Info - {operation_name}:')
         for key, value in info.items():
             self.logger.info(f'  {key}: {value}')
-
-    def log_operation_result(self, operation: str,
-                            initial_shape: tuple,
-                            final_shape: tuple,
-                            details: Optional[Dict[str, Any]] = None) -> None:
+    def log_operation_result(self, operation: str, initial_shape: tuple, final_shape: tuple, details: Optional[Dict[str, Any]] = None) -> None:
         self.logger.info(f'{operation} changed shape from {initial_shape} to {final_shape}')
         if details:
             for key, value in details.items():
                 self.logger.info(f'  {key}: {value}')
-
     def log_error(self, error_message: str) -> None:
         self.logger.error(error_message)
-
     def get_logs(self) -> str:
         log_output = []
         for handler in self.logger.handlers:
@@ -528,29 +468,25 @@ class DataLogger:
                     log_output = f.readlines()
         return ''.join(log_output)
 
-
 class Scruffy:
     def __init__(self):
+        from version_control.controller import VersionController
         self.broom = Broom()
         self.vacuum = Vacuum()
         self.llm = LLMHandler()
         self.logger = DataLogger()
-
         self.filename = None
         self.orig_df = None
         self.curr_df = None
-        self.dataframe_versions = {}
         self.history = []
-
-        if 'dataframe_versions' in st.session_state:
-            self.dataframe_versions = st.session_state['dataframe_versions']
-        else:
-            st.session_state['dataframe_versions'] = self.dataframe_versions
+        self.version_controller = VersionController()
+        self.version_controller.load_from_session()
 
     def _get_current_df(self):
-        selected_version = st.session_state.get('selected_version')
-        if selected_version and selected_version in self.dataframe_versions:
-            return self.dataframe_versions[selected_version]
+        df_versions = self.version_controller.get_dataframes()
+        selected_version = self.version_controller.get_selected_version()
+        if selected_version and selected_version in df_versions:
+            return df_versions[selected_version]
         return self.curr_df
 
     def _update_system_prompt(self, df=None):
@@ -560,29 +496,23 @@ class Scruffy:
 
     def load_data(self, df, filename):
         self.logger.log_data_info(df, 'Initial Load')
-
         self.orig_df = df.copy()
         self.curr_df = df.copy()
         self.history = []
         self.filename = filename.rsplit('.', 1)[0]
-
-
-        self.dataframe_versions[filename] = self.orig_df.copy()
-        st.session_state['dataframe_versions'] = self.dataframe_versions
-        st.session_state['selected_version'] = filename
-
+        self.version_controller.add_version(filename, self.orig_df.copy())
+        self.version_controller.set_selected_version(filename)
+        st.session_state['df'] = self.orig_df.copy()
         self._update_system_prompt(df)
 
     def scruff(self, df=None, options=None):
-        current_df = self._get_current_df()
-        df_to_clean = df if df is not None else current_df
-
-        self.logger.log_data_info(df_to_clean, 'Before Scruff')
+        self.logger.log_data_info(self._get_current_df(), 'Before Scruff')
+        df_to_clean = df if df is not None else self._get_current_df()
 
         excluded_columns = options.get('excluded_columns', [])
         columns_to_process = [col for col in df_to_clean.columns if col not in excluded_columns]
 
-        df_to_clean_excluded = df_to_clean[excluded_columns].copy()
+        df_to_clean_excluded = df_to_clean[excluded_columns].copy() if excluded_columns else pd.DataFrame()
         df_to_clean_processed = df_to_clean[columns_to_process].copy()
 
         cleaned_df_processed = self.broom.scruff(
@@ -603,13 +533,11 @@ class Scruffy:
             self.curr_df = cleaned_df.copy()
             self.history.append(('clean', None))
 
-            scruffed_filename = f'{self.filename}_scruffed.csv'
-            self.dataframe_versions[scruffed_filename] = cleaned_df.copy()
-            st.session_state['dataframe_versions'] = self.dataframe_versions
-            st.session_state['selected_version'] = scruffed_filename
+            current_version = self.version_controller.get_selected_version()
+            base_name = current_version.rsplit('.', 1)[0]
+            scruffed_filename = f'{base_name}_scruffed.csv'
 
-            self._update_system_prompt(cleaned_df)
-            st.rerun()
+            self.version_controller.add_version(scruffed_filename, cleaned_df.copy())
 
         return cleaned_df
 
@@ -618,71 +546,55 @@ class Scruffy:
         if self.orig_df is not None:
             self.curr_df = self.orig_df.copy()
             self.history = []
-
-            self.dataframe_versions = {'Original': self.orig_df.copy()}
-            st.session_state['dataframe_versions'] = self.dataframe_versions
+            from version_control.controller import VersionController
+            self.version_controller = VersionController()
+            self.version_controller.load_from_session()
+            st.session_state['dataframe_versions'] = {'Original': self.orig_df.copy()}
             st.session_state['selected_version'] = 'Original'
-
             self._update_system_prompt(self.orig_df)
-            st.rerun()
-
 
     def undo(self):
         if self.history:
             self.history.pop()
             self.curr_df = self.orig_df.copy()
-
-            self.dataframe_versions = {'Original': self.orig_df.copy()}
-
+            from version_control.controller import VersionController
+            self.version_controller = VersionController()
+            self.version_controller.load_from_session()
+            st.session_state['dataframe_versions'] = {'Original': self.orig_df.copy()}
             for op_type, op_data in self.history:
                 if op_type == 'clean':
                     self.scruff()
                 elif op_type == 'command':
                     self.apply_command(op_data)
-
-            st.session_state['dataframe_versions'] = self.dataframe_versions
-            st.session_state['selected_version'] = list(self.dataframe_versions.keys())[-1]
-
+            st.session_state['selected_version'] = list(st.session_state['dataframe_versions'].keys())[-1]
             self._update_system_prompt(self.curr_df)
-            st.rerun()
 
     def apply_command(self, command, df=None):
         current_df = self._get_current_df()
         df_to_use = df if df is not None else current_df
-
         scruff_options = command.get('scruff')
         if scruff_options:
             df_to_use = self.broom.scruff(df_to_use, options=scruff_options)
-
         filters = command.get('filters')
         if filters:
             result = self.vacuum.apply_command(df_to_use, command)
         else:
             result = df_to_use
-
         if df is None:
             version_name = command.get('filename', 'unnamed_command.csv')
-            self.dataframe_versions[version_name] = result
-            st.session_state['dataframe_versions'] = self.dataframe_versions
-            st.session_state['selected_version'] = version_name
+            self.version_controller.add_version(version_name, result)
             st.session_state['df'] = result
-            self._update_system_prompt(result)
-            st.rerun()
-
         return result
 
     def apply_commands(self, commands, get_counts=False):
         results = []
         counts = [] if get_counts else None
         current_df = self._get_current_df()
-
         for command in commands:
             df_to_use = current_df.copy()
-
             scruff_options = command.get('scruff')
             if scruff_options:
                 df_to_use = self.broom.scruff(df_to_use, options=scruff_options)
-
             filters = command.get('filters')
             if filters:
                 try:
@@ -694,11 +606,9 @@ class Scruffy:
                     else:
                         filter_df = self.vacuum.apply_command(df_to_use, command)
                         results.append(filter_df)
-
                     if filter_df is not None:
                         version_name = command.get('filename', 'unnamed.csv')
-                        self.dataframe_versions[version_name] = filter_df.copy()
-
+                        self.version_controller.add_version(version_name, filter_df.copy())
                 except Exception as e:
                     st.error(f'Error applying command: {str(e)}')
                     if get_counts:
@@ -713,12 +623,8 @@ class Scruffy:
                 else:
                     results.append(df_to_use)
                 version_name = command.get('filename', 'unnamed.csv')
-                self.dataframe_versions[version_name] = df_to_use.copy()
-
-        st.session_state['dataframe_versions'] = self.dataframe_versions
-
+                self.version_controller.add_version(version_name, df_to_use.copy())
         return (results, counts) if get_counts else results
-
 
     def generate_response(self, user_input: str) -> List[Dict[str, Any]]:
         self._update_system_prompt()
