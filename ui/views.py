@@ -186,10 +186,6 @@ class ScruffOptionsView(TabView):
         scruff_options = self._get_scruff_options()
         col1, col2 = st.columns(2)
         with col1:
-            if st.button('SCRUFF'):
-                st.session_state['scruffy'].scruff(options=scruff_options)
-                st.success('Data cleaned using Scruff options.')
-        with col2:
             if st.button('Generate Scruff Command'):
                 selected_version = st.session_state.get('selected_version', '')
                 if selected_version:
@@ -209,6 +205,12 @@ class ScruffOptionsView(TabView):
                     st.session_state['commands'].append(command)
                     st.success('Scruff command added to sidebar.')
                     st.rerun()
+        with col2:
+            if st.button('SCRUFF'):
+                st.session_state['scruffy'].scruff(options=scruff_options)
+                st.success('Data cleaned using Scruff options.')
+
+
     def _get_scruff_options(self):
         options = {}
         with st.expander('Column Options', expanded=False):
