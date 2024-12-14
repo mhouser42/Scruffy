@@ -1,3 +1,4 @@
+# Root and Command Structure
 root ::= "[" ws? (command-object ws? ("," ws? command-object ws?)*)? ws? "]"
 
 command-object ::= "{" ws?
@@ -7,35 +8,15 @@ command-object ::= "{" ws?
     (ws? "," ws? scruff-section)?
 ws? "}"
 
+# Main Sections
 filters-section ::= "\"filters\"" ws? ":" ws? filter-conditions
-
 scruff-section ::= "\"scruff\"" ws? ":" ws? scruff-options
 
+# Filter Components
 filter-conditions ::= "{" ws?
     (simple-filter | logical-filter)
     (ws? "," ws? (simple-filter | logical-filter))*
 ws? "}"
-
-scruff-options ::= "{" ws?
-    (scruff-option (ws? "," ws? scruff-option)*)?
-ws? "}"
-
-scruff-option ::= "\"" scruff-key "\"" ws? ":" ws? scruff-value
-
-scruff-key ::= "standardize_columns" | "drop_empty_columns" | "drop_duplicate_columns" |
-               "drop_na_rows" | "drop_duplicate_rows" | "normalize_numeric" |
-               "handle_outliers" | "z_score_threshold" | "fill_numeric_na" | "fill_method" |
-               "clean_text" | "remove_accents" | "to_lowercase" | "remove_special_chars" |
-               "remove_stopwords" | "lemmatize" | "excluded_columns" | "numeric_conversion" |
-               "drop_na_threshold"
-
-scruff-value ::= boolean | number | string | array | null
-
-boolean ::= "true" | "false"
-
-array ::= "[" ws? (value (ws? "," ws? value)*)? ws? "]"
-
-value ::= string | number | boolean | null | array
 
 simple-filter ::= "\"" column-name "\"" ws? ":" ws? operation-object
 
@@ -57,7 +38,28 @@ operation-type ::= "\"==\"" | "\"!=\"" | "\"<\"" | "\"<=\"" | "\">\"" | "\">=\""
     "\"contains\"" | "\"+\"" | "\"-\"" | "\"*\"" | "\"/\"" | "\"//\"" |
     "\"%\"" | "\"**\"" | "\"&\"" | "\"|\"" | "\"^\"" | "\"~\"" | "\"<<\"" | "\">>\""
 
-column-name ::= string
+# Scruff Components
+scruff-options ::= "{" ws?
+    (scruff-option (ws? "," ws? scruff-option)*)?
+ws? "}"
+
+scruff-option ::= "\"" scruff-key "\"" ws? ":" ws? scruff-value
+
+scruff-key ::= "standardize_columns" | "drop_empty_columns" | "drop_duplicate_columns" |
+               "drop_na_rows" | "drop_duplicate_rows" | "normalize_numeric" |
+               "handle_outliers" | "z_score_threshold" | "fill_numeric_na" | "fill_method" |
+               "clean_text" | "remove_accents" | "to_lowercase" | "remove_special_chars" |
+               "remove_stopwords" | "lemmatize" | "excluded_columns" | "numeric_conversion" |
+               "drop_na_threshold" | "replace_values" | "replace_all_values"
+
+# Basic Data Types
+value ::= string | number | boolean | null | array | object
+
+array ::= "[" ws? (value (ws? "," ws? value)*)? ws? "]"
+
+object ::= "{" ws? (string ws? ":" ws? value ws? ("," ws? string ws? ":" ws? value ws?)*)? ws? "}"
+
+boolean ::= "true" | "false"
 
 string ::= "\"" ([^"\\\n] | "\\" ["\\bfnrt"/\\])* "\""
 
@@ -65,4 +67,7 @@ number ::= "-"? ([0-9] | [1-9][0-9]*) ("." [0-9]+)? ([eE][-+]?[0-9]+)?
 
 null ::= "null"
 
+column-name ::= string
+
+# Whitespace
 ws ::= [ \t\n\r]+
