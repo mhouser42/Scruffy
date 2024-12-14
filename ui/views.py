@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from config import CONFIG
 from utils.command import create_command, generate_scruff_command
 from utils.general import get_image_as_base64
