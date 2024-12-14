@@ -1,1 +1,7 @@
 'auth.txt'
+__pycache__/
+*.pyc
+logs/
+.idea/
+auth.txt
+__pycache__/
