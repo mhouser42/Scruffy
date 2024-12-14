@@ -32,6 +32,151 @@ class TabView:
     def render(self):
         raise NotImplementedError('Render method must be implemented by subclass.')
 
+
+class NaturalLanguageView(TabView):
+    def render(self):
+        st.markdown('### Describe Your Data Manipulation Command')
+        user_input = st.text_area('📝 Enter your instructions here:')
+        if st.button('🤖 Generate Commands', key='nl_generate_commands') and user_input.strip():
+            def generate_commands():
+                try:
+                    scruffy = st.session_state['scruffy']
+                    new_commands = scruffy.llm.generate_response(user_input)
+                    if st.session_state.get('is_default_template', True):
+                        st.session_state['commands'] = new_commands
+                        st.session_state['is_default_template'] = False
+                    else:
+                        st.session_state['commands'].extend(new_commands)
+                    st.success('Commands generated successfully.')
+                    st.rerun()
+                except Exception as e:
+                    st.error(f'Error generating commands: {str(e)}')
+            with st.spinner('Generating commands...'):
+                generate_commands()
+
+
+class FilterBuilderView(TabView):
+    def render(self, df=None):
+        if df is None:
+            df = st.session_state['df']
+        filename, description = self._render_command_settings()
+        self._render_filter_group(df)
+        if st.button('✨ Create Command', key='cm_create_command'):
+            if any(group['filters'] for group in st.session_state['filter_groups']):
+                create_command(description, filename)
+            else:
+                st.warning('Please add at least one filter before creating a command.')
+    def _render_command_settings(self):
+        st.markdown('### Construct Your Own Command')
+        from config import CONFIG
+        filename = st.text_input('Filename', value=CONFIG['data'].DEFAULT_FILENAME)
+        description = st.text_input('Description')
+        return filename, description
+    def _render_filter_group(self, df):
+        from utils.general import get_OPS_mapping
+        OPS = get_OPS_mapping()
+        def initialize_session_state():
+            if 'filter_groups' not in st.session_state:
+                st.session_state['filter_groups'] = [{'filters': []}]
+            if 'filter_actions' not in st.session_state:
+                st.session_state['filter_actions'] = {}
+        initialize_session_state()
+        st.markdown('### Filter Groups')
+        for group_idx, group in enumerate(st.session_state['filter_groups']):
+            with st.expander(f'Filter Group {group_idx + 1}', expanded=True):
+                cols = st.columns([1, 2, 1, 1])
+                with cols[0]:
+                    if len(group['filters']) >= 1:
+                        group['logical_op'] = st.selectbox(
+                            '',
+                            options=['AND', 'OR', 'XOR'],
+                            key=f'logical_op_{group_idx}',
+                            index=['AND', 'OR', 'XOR'].index(group.get('logical_op', 'AND'))
+                        )
+                with cols[1]:
+                    if st.button('➕ Add Filter', key=f'add_filter_{group_idx}'):
+                        current_filters = len(group['filters'])
+                        group['filters'].append({'column': None, 'op': None, 'value': None})
+                        if current_filters == 1 and group.get('logical_op') in ['OR', 'XOR']:
+                            group['filters'].append({'column': None, 'op': None, 'value': None})
+                with cols[2]:
+                    if st.button('❌ Remove Group', key=f'remove_group_{group_idx}'):
+                        st.session_state['filter_groups'].pop(group_idx)
+                        st.rerun()
+                for filter_idx, filter_dict in enumerate(group['filters']):
+                    filter_cols = st.columns([3, 2, 3, 1])
+                    with filter_cols[0]:
+                        column = st.selectbox(
+                            'Column',
+                            options=df.columns,
+                            key=f'column_{group_idx}_{filter_idx}'
+                        )
+                        if column != filter_dict['column']:
+                            filter_dict['column'] = column
+                            filter_dict['value'] = None
+                    with filter_cols[1]:
+                        filter_dict['op'] = st.selectbox(
+                            'Operation',
+                            options=OPS.keys(),
+                            format_func=lambda x: OPS[x],
+                            key=f'op_{group_idx}_{filter_idx}'
+                        )
+                    with filter_cols[2]:
+                        if filter_dict['op'] not in ['isna', 'notna']:
+                            self._render_value_input(filter_dict, df, f'{group_idx}_{filter_idx}')
+                        else:
+                            st.text('No value needed')
+                    with filter_cols[3]:
+                        min_filters = 2 if group.get('logical_op') in ['OR', 'XOR'] else 1
+                        if len(group['filters']) > min_filters:
+                            if st.button('❌', key=f'remove_filter_{group_idx}_{filter_idx}'):
+                                group['filters'].pop(filter_idx)
+                                st.rerun()
+                if group.get('logical_op') in ['OR', 'XOR'] and len(group['filters']) < 2:
+                    group['filters'].append({'column': None, 'op': None, 'value': None})
+        if st.button('➕ Add Filter Group', key='add_filter_group'):
+            st.session_state['filter_groups'].append({'filters': []})
+            st.rerun()
+        st.divider()
+
+    def _render_value_input(self, filter_dict, df, key_suffix):
+        if not filter_dict['column'] or not filter_dict['op']:
+            return
+
+        column = filter_dict['column']
+        column_type = df[column].dtype
+        unique_values = df[column].nunique()
+
+        if filter_dict['op'] in ['isna', 'notna']:
+            filter_dict['value'] = None
+            return
+        elif filter_dict['op'] == 'between':
+            unique_values_list = sorted(df[column].dropna().unique().tolist())
+            col1, col2 = st.columns(2)
+            with col1:
+                if pd.api.types.is_numeric_dtype(column_type):
+                    value1 = st.selectbox('From', options=unique_values_list, key=f'value1_{key_suffix}')
+                else:
+                    value1 = st.date_input('From', key=f'value1_{key_suffix}')
+            with col2:
+                if pd.api.types.is_numeric_dtype(column_type):
+                    value2 = st.selectbox('To', options=unique_values_list, key=f'value2_{key_suffix}')
+                else:
+                    value2 = st.date_input('To', key=f'value2_{key_suffix}')
+            filter_dict['value'] = [value1, value2]
+        else:
+            if filter_dict['op'] == 'contains':
+                filter_dict['value'] = st.text_input('Value', key=f'value_{key_suffix}')
+            else:
+                unique_values_list = sorted(df[column].dropna().unique().tolist())
+                if pd.api.types.is_numeric_dtype(column_type):
+                    filter_dict['value'] = st.selectbox('Value', options=unique_values_list, key=f'value_{key_suffix}')
+                elif pd.api.types.is_datetime64_any_dtype(column_type):
+                    filter_dict['value'] = st.selectbox('Value', options=unique_values_list, key=f'value_{key_suffix}')
+                else:
+                    filter_dict['value'] = st.selectbox('Value', options=unique_values_list, key=f'value_{key_suffix}')
+
+
 class ScruffOptionsView(TabView):
     def __init__(self):
         super().__init__()
@@ -155,141 +300,6 @@ class ScruffOptionsView(TabView):
             )
         return options
 
-class NaturalLanguageView(TabView):
-    def render(self):
-        st.markdown('### Describe Your Data Manipulation Command')
-        user_input = st.text_area('📝 Enter your instructions here:')
-        if st.button('🤖 Generate Commands', key='nl_generate_commands') and user_input.strip():
-            def generate_commands():
-                try:
-                    scruffy = st.session_state['scruffy']
-                    new_commands = scruffy.llm.generate_response(user_input)
-                    if st.session_state.get('is_default_template', True):
-                        st.session_state['commands'] = new_commands
-                        st.session_state['is_default_template'] = False
-                    else:
-                        st.session_state['commands'].extend(new_commands)
-                    st.success('Commands generated successfully.')
-                    st.rerun()
-                except Exception as e:
-                    st.error(f'Error generating commands: {str(e)}')
-            with st.spinner('Generating commands...'):
-                generate_commands()
-
-class FilterBuilderView(TabView):
-    def render(self, df=None):
-        if df is None:
-            df = st.session_state['df']
-        filename, description = self._render_command_settings()
-        self._render_filter_group(df)
-        if st.button('✨ Create Command', key='cm_create_command'):
-            if any(group['filters'] for group in st.session_state['filter_groups']):
-                create_command(description, filename)
-            else:
-                st.warning('Please add at least one filter before creating a command.')
-    def _render_command_settings(self):
-        st.markdown('### Construct Your Own Command')
-        from config import CONFIG
-        filename = st.text_input('Filename', value=CONFIG['data'].DEFAULT_FILENAME)
-        description = st.text_input('Description')
-        return filename, description
-    def _render_filter_group(self, df):
-        from utils.general import get_OPS_mapping
-        OPS = get_OPS_mapping()
-        def initialize_session_state():
-            if 'filter_groups' not in st.session_state:
-                st.session_state['filter_groups'] = [{'filters': []}]
-            if 'filter_actions' not in st.session_state:
-                st.session_state['filter_actions'] = {}
-        initialize_session_state()
-        st.markdown('### Filter Groups')
-        for group_idx, group in enumerate(st.session_state['filter_groups']):
-            with st.expander(f'Filter Group {group_idx + 1}', expanded=True):
-                cols = st.columns([1, 2, 1, 1])
-                with cols[0]:
-                    if len(group['filters']) >= 1:
-                        group['logical_op'] = st.selectbox(
-                            '',
-                            options=['AND', 'OR', 'XOR'],
-                            key=f'logical_op_{group_idx}',
-                            index=['AND', 'OR', 'XOR'].index(group.get('logical_op', 'AND'))
-                        )
-                with cols[1]:
-                    if st.button('➕ Add Filter', key=f'add_filter_{group_idx}'):
-                        current_filters = len(group['filters'])
-                        group['filters'].append({'column': None, 'op': None, 'value': None})
-                        if current_filters == 1 and group.get('logical_op') in ['OR', 'XOR']:
-                            group['filters'].append({'column': None, 'op': None, 'value': None})
-                with cols[2]:
-                    if st.button('❌ Remove Group', key=f'remove_group_{group_idx}'):
-                        st.session_state['filter_groups'].pop(group_idx)
-                        st.rerun()
-                for filter_idx, filter_dict in enumerate(group['filters']):
-                    filter_cols = st.columns([3, 2, 3, 1])
-                    with filter_cols[0]:
-                        column = st.selectbox(
-                            'Column',
-                            options=df.columns,
-                            key=f'column_{group_idx}_{filter_idx}'
-                        )
-                        if column != filter_dict['column']:
-                            filter_dict['column'] = column
-                            filter_dict['value'] = None
-                    with filter_cols[1]:
-                        filter_dict['op'] = st.selectbox(
-                            'Operation',
-                            options=OPS.keys(),
-                            format_func=lambda x: OPS[x],
-                            key=f'op_{group_idx}_{filter_idx}'
-                        )
-                    with filter_cols[2]:
-                        if filter_dict['op'] not in ['isna', 'notna']:
-                            self._render_value_input(filter_dict, df, f'{group_idx}_{filter_idx}')
-                        else:
-                            st.text('No value needed')
-                    with filter_cols[3]:
-                        min_filters = 2 if group.get('logical_op') in ['OR', 'XOR'] else 1
-                        if len(group['filters']) > min_filters:
-                            if st.button('❌', key=f'remove_filter_{group_idx}_{filter_idx}'):
-                                group['filters'].pop(filter_idx)
-                                st.rerun()
-                if group.get('logical_op') in ['OR', 'XOR'] and len(group['filters']) < 2:
-                    group['filters'].append({'column': None, 'op': None, 'value': None})
-        if st.button('➕ Add Filter Group', key='add_filter_group'):
-            st.session_state['filter_groups'].append({'filters': []})
-            st.rerun()
-        st.divider()
-    def _render_value_input(self, filter_dict, df, key_suffix):
-        if not filter_dict['column'] or not filter_dict['op']:
-            return
-        column = filter_dict['column']
-        column_type = df[column].dtype
-        unique_values = df[column].nunique()
-        if filter_dict['op'] in ['isna', 'notna']:
-            filter_dict['value'] = None
-            return
-        elif filter_dict['op'] == 'between':
-            unique_values_list = sorted(df[column].dropna().unique().tolist())
-            col1, col2 = st.columns(2)
-            with col1:
-                if pd.api.types.is_numeric_dtype(column_type):
-                    value1 = st.selectbox('From', options=unique_values_list, key=f'value1_{key_suffix}')
-                else:
-                    value1 = st.date_input('From', key=f'value1_{key_suffix}')
-            with col2:
-                if pd.api.types.is_numeric_dtype(column_type):
-                    value2 = st.selectbox('To', options=unique_values_list, key=f'value2_{key_suffix}')
-                else:
-                    value2 = st.date_input('To', key=f'value2_{key_suffix}')
-            filter_dict['value'] = [value1, value2]
-        else:
-            unique_values_list = sorted(df[column].dropna().unique().tolist())
-            if pd.api.types.is_numeric_dtype(column_type):
-                filter_dict['value'] = st.selectbox('Value', options=unique_values_list, key=f'value_{key_suffix}')
-            elif pd.api.types.is_datetime64_any_dtype(column_type):
-                filter_dict['value'] = st.selectbox('Value', options=unique_values_list, key=f'value_{key_suffix}')
-            else:
-                filter_dict['value'] = st.selectbox('Value', options=unique_values_list, key=f'value_{key_suffix}')
 
 class ComponentRegistry:
     _components = {
