@@ -594,21 +594,23 @@ class Scruffy:
             self._update_system_prompt(self.curr_df)
 
     def apply_command(self, command, df=None):
-        current_df = self._get_current_df()
-        df_to_use = df if df is not None else current_df
-        scruff_options = command.get('scruff')
-        if scruff_options:
-            df_to_use = self.broom.scruff(df_to_use, options=scruff_options)
+        current_df = df if df is not None else self._get_current_df()
+
         filters = command.get('filters')
         if filters:
-            result = self.vacuum.apply_command(df_to_use, command)
-        else:
-            result = df_to_use
+            current_df = self.vacuum.apply_command(current_df, command)
+
+        scruff_options = command.get('scruff')
+        if scruff_options:
+            current_df = self.broom.scruff(current_df, options=scruff_options)
+
         if df is None:
             version_name = command.get('filename', 'unnamed_command.csv')
-            self.version_controller.add_version(version_name, result)
-            st.session_state['df'] = result
-        return result
+            self.version_controller.add_version(version_name, current_df)
+            st.session_state['df'] = current_df
+
+        return current_df
+
 
     def apply_commands(self, commands, get_counts=False):
         results = []
