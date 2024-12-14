@@ -298,6 +298,42 @@ class ScruffOptionsView(TabView):
                 'Lemmatize Text',
                 value=self.scruff_defaults.TEXT_OPTIONS['lemmatize']
             )
+
+        with st.expander('Value Replacement Options', expanded=False):
+            if st.checkbox('Replace values in specific columns'):
+                options['replace_values'] = {}
+                if 'df' in st.session_state:
+                    columns = st.session_state['df'].columns.tolist()
+                    selected_columns = st.multiselect('Select columns for value replacement', options=columns)
+                    for column in selected_columns:
+                        st.subheader(f'Replacements for {column}')
+                        num_replacements = st.number_input(f'Number of replacements for {column}', min_value=1,
+                                                           max_value=10, value=1, key=f'num_rep_{column}')
+                        column_replacements = {}
+                        for i in range(num_replacements):
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                old_value = st.text_input(f'Old value {i + 1}', key=f'old_{column}_{i}')
+                            with col2:
+                                new_value = st.text_input(f'New value {i + 1}', key=f'new_{column}_{i}')
+                            if old_value and new_value:
+                                column_replacements[old_value] = new_value
+                        if column_replacements:
+                            options['replace_values'][column] = column_replacements
+
+            if st.checkbox('Replace values across all columns'):
+                options['replace_all_values'] = {}
+                num_global_replacements = st.number_input('Number of global replacements', min_value=1, max_value=10,
+                                                          value=1)
+                for i in range(num_global_replacements):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        old_value = st.text_input(f'Old value {i + 1}', key=f'global_old_{i}')
+                    with col2:
+                        new_value = st.text_input(f'New value {i + 1}', key=f'global_new_{i}')
+                    if old_value and new_value:
+                        options['replace_all_values'][old_value] = new_value
+
         return options
 
 

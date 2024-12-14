@@ -157,12 +157,36 @@ class Broom:
             )
         return df
 
-    def scruff(self, df, options):
-        cleaned_df = df.copy()
-        cleaned_df = self._handle_column_operations(cleaned_df, options)
-        cleaned_df = self._handle_row_operations(cleaned_df, options)
-        cleaned_df = self._handle_numeric_operations(cleaned_df, options)
-        cleaned_df = self._handle_text_operations(cleaned_df, options)
+    def _handle_value_replacement(self, df, options):
+        if options.get('replace_values'):
+            replacements = options['replace_values']
+            for column, value_map in replacements.items():
+                if column in df.columns:
+                    df[column] = df[column].replace(value_map)
+
+        if options.get('replace_all_values'):
+            value_map = options['replace_all_values']
+            df = df.replace(value_map)
+
+        return df
+
+    def scruff(self, df_to_clean, options=None):
+        excluded_columns = options.get('excluded_columns', []) if options else []
+        columns_to_process = [col for col in df_to_clean.columns if col not in excluded_columns]
+
+        df_to_clean_excluded = df_to_clean[excluded_columns].copy() if excluded_columns else pd.DataFrame()
+        df_to_clean_processed = df_to_clean[columns_to_process].copy()
+
+        cleaned_df_processed = (
+            df_to_clean_processed
+            .pipe(lambda x: self._handle_column_operations(x, options))
+            .pipe(lambda x: self._handle_row_operations(x, options))
+            .pipe(lambda x: self._handle_numeric_operations(x, options))
+            .pipe(lambda x: self._handle_text_operations(x, options))
+            .pipe(lambda x: self._handle_value_replacement(x, options))
+        )
+
+        cleaned_df = pd.concat([cleaned_df_processed, df_to_clean_excluded], axis=1)
         return cleaned_df
 
 class Vacuum:
