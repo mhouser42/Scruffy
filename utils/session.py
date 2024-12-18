@@ -1,6 +1,6 @@
 import streamlit as st
 from scruffy import Scruffy
-from config import CONFIG
+from config.config import CONFIG
 from utils.general import get_default_template
 
 def initialize_session_state():

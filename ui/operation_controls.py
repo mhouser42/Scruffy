@@ -1,5 +1,5 @@
 import streamlit as st
-from config import CONFIG
+from config.config import CONFIG
 from ui.views import ComponentRegistry
 import pandas as pd
 

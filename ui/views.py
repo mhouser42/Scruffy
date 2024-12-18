@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from config import CONFIG
+from config.config import CONFIG
 from utils.command import create_command, generate_scruff_command
 from utils.general import get_image_as_base64
 
@@ -79,7 +79,7 @@ class FilterBuilderView(TabView):
 
     def _render_command_settings(self):
         st.markdown('### Construct Your Own Command')
-        from config import CONFIG
+        from config.config import CONFIG
         filename = st.text_input('Filename', value=CONFIG['data'].DEFAULT_FILENAME)
         description = st.text_input('Description')
         return filename, description

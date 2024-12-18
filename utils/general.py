@@ -4,7 +4,7 @@ import os
 import io
 import json
 import streamlit as st
-from config import CONFIG
+from config.config import CONFIG
 
 def get_image_as_base64(image_path: str) -> str:
     with open(image_path, 'rb') as f:

@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_ace import st_ace
 import pandas as pd
-from config import CONFIG
+from config.config import CONFIG
 from utils.general import get_OPS_mapping, get_default_template, load_example_schemas
 import json
 

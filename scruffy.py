@@ -15,7 +15,7 @@ import re
 import operator
 import unicodedata
 from typing import Dict, Any, List, Optional
-from config import CONFIG
+from config.config import CONFIG
 
 
 class Broom:
